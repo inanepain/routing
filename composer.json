@@ -1,0 +1,41 @@
+{
+	"name" : "inanepain/routing",
+	"description" : "HTTP routing using attributes.",
+	"type" : "library",
+	"license" : "UNLICENSE",
+	"authors" : [{
+			"name" : "Philip Michael Raab",
+			"email" : "peep@inane.co.za",
+			"role" : "Developer"
+		}
+	],
+	"homepage" : "http://inane.co.za",
+	"readme": "README.md",
+	"support" : {
+		"email" : "peep@inane.co.za",
+		"issues" : "http://inane.co.za"
+	},
+	"keywords" : [
+		"inane",
+		"attribute",
+		"route",
+		"router",
+		"routing"
+	],
+	"autoload" : {
+		"psr-4" : {
+			"Inane\\Routing\\" : "src/"
+		}
+	},
+	"config": {
+        "preferred-install" : "dist",
+		"optimize-autoloader" : true,
+		"discard-changes" : true,
+		"sort-packages": true
+    },
+	"require" : {
+		"php" : ">=8.1"
+	},
+	"require-dev": {
+    }
+}

@@ -14,7 +14,7 @@
 
 declare(strict_types=1);
 
-namespace Inane\Routing\Attribute;
+namespace Inane\Routing;
 
 use function array_combine;
 use function preg_match;

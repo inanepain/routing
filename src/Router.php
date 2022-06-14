@@ -156,38 +156,6 @@ class Router {
     }
 
     /**
-     * Iterate over all the attributes of the controllers in order to find the first one corresponding to the request.
-     * If a match is found then an array is returned with the class, method and parameters, otherwise null is returned
-     *
-     * @param null|\Inane\Http\Request $request
-     *
-     * @return null|array
-     *
-     * @throws \Inane\Stdlib\Exception\UnexpectedValueException
-     * @throws \Inane\Stdlib\Exception\BadMethodCallException
-     */
-    public function match(?Request $request = null): ?array {
-        if (is_null($request)) $request = new Request();
-        $uri = "{$request->getUri()}";
-
-        if (!empty($this->baseURI)) {
-            $baseURI = preg_quote($this->baseURI, '/');
-            $uri = preg_replace("/^{$baseURI}/", '', $uri);
-        }
-        $uri = (empty($uri) ? '/' : $uri);
-
-        foreach ($this->routes as $route)
-            if ($this->matchRequest($request, $route['route'], $params))
-                return [
-                    'class'  => $route['class'],
-                    'method' => $route['method'],
-                    'params' => $params ?? [],
-                ];
-
-        return null;
-    }
-
-    /**
      * Generate a URL according to the name of the route
      *
      * @param string $routeName  The name of the route to generate
@@ -236,5 +204,37 @@ class Router {
         }
 
         return $this->baseURI . $path;
+    }
+
+    /**
+     * Iterate over all the attributes of the controllers in order to find the first one corresponding to the request.
+     * If a match is found then an array is returned with the class, method and parameters, otherwise null is returned
+     *
+     * @param null|\Inane\Http\Request $request if not the current request
+     *
+     * @return null|array
+     *
+     * @throws \Inane\Stdlib\Exception\UnexpectedValueException
+     * @throws \Inane\Stdlib\Exception\BadMethodCallException
+     */
+    public function match(?Request $request = null): ?array {
+        if (is_null($request)) $request = new Request();
+        $uri = "{$request->getUri()}";
+
+        if (!empty($this->baseURI)) {
+            $baseURI = preg_quote($this->baseURI, '/');
+            $uri = preg_replace("/^{$baseURI}/", '', $uri);
+        }
+        $uri = (empty($uri) ? '/' : $uri);
+
+        foreach ($this->routes as $route)
+            if ($this->matchRequest($request, $route['route'], $params))
+                return [
+                    'class'  => $route['class'],
+                    'method' => $route['method'],
+                    'params' => $params ?? [],
+                ];
+
+        return null;
     }
 }

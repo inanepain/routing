@@ -10,13 +10,16 @@
  *
  * @license UNLICENSE
  * @license https://github.com/inanepain/stdlib/raw/develop/UNLICENSE UNLICENSE
+ *
+ * @version $Id$
+ * $Date$
  */
 
 declare(strict_types=1);
 
 namespace Inane\Routing;
 
-use Inane\Routing\Attribute\Route;
+use Inane\Http\Request;
 
 use function array_diff_key;
 use function array_filter;
@@ -26,6 +29,7 @@ use function count;
 use function explode;
 use function implode;
 use function in_array;
+use function is_null;
 use function preg_match;
 use function preg_quote;
 use function preg_replace;
@@ -39,7 +43,7 @@ use const true;
  * Router
  *
  * @package Inane\Routing
- * @version 1.0.0
+ * @version 1.1.0
  */
 class Router {
     /**
@@ -65,6 +69,56 @@ class Router {
     ) {
         if (!empty($controllers))
             $this->addRoutes($controllers);
+    }
+
+    /**
+     * Check if the user's request matches the given route
+     *
+     * @param \Inane\Http\Request $request Request
+     * @param \Inane\Routing\Route $route Route
+     * @param null|array $params Array that will be filled with the parameters and their value provided in the request
+     *
+     * @return bool
+     *
+     * @throws \Inane\Stdlib\Exception\UnexpectedValueException
+     * @throws \Inane\Stdlib\Exception\BadMethodCallException
+     */
+    private function matchRequest(Request $request, Route $route, ?array &$params = []): bool {
+        $uri = "{$request->getUri()}";
+
+        $requestArray = explode('/', $uri);
+        $pathArray = explode('/', $route->getPath());
+
+        // Remove empty values in arrays
+        $requestArray = array_values(array_filter($requestArray, 'strlen'));
+        $pathArray = array_values(array_filter($pathArray, 'strlen'));
+
+        if (
+            !(count($requestArray) === count($pathArray))
+            || !(in_array($request->getMethod(), $route->getMethods(), true))
+        )
+            return false;
+
+        foreach ($pathArray as $index => $urlPart) {
+            if (isset($requestArray[$index])) {
+                if (str_starts_with($urlPart, '{')) {
+                    $routeParameter = explode(' ', preg_replace('/{([\w\-%]+)(<(.+)>)?}/', '$1 $3', $urlPart));
+                    $paramName = $routeParameter[0];
+                    $paramRegExp = (empty($routeParameter[1]) ? '[\w\-]+' : $routeParameter[1]);
+
+                    if (preg_match('/^' . $paramRegExp . '$/', $requestArray[$index])) {
+                        $params[$paramName] = $requestArray[$index];
+
+                        continue;
+                    }
+                } elseif ($urlPart === $requestArray[$index])
+                    continue;
+            }
+
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -102,77 +156,6 @@ class Router {
                 }
             }
         }
-    }
-
-    /**
-     * Iterate over all the attributes of the controllers in order to find the first one corresponding to the request.
-     * If a match is found then an array is returned with the class, method and parameters, otherwise null is returned
-     *
-     * @return string[]|null
-     */
-    public function match(): ?array {
-        $request = $_SERVER['REQUEST_URI'];
-
-        if (!empty($this->baseURI)) {
-            $baseURI = preg_quote($this->baseURI, '/');
-            $request = preg_replace("/^{$baseURI}/", '', $request);
-        }
-        $request = (empty($request) ? '/' : $request);
-
-        foreach ($this->routes as $route)
-            if ($this->matchRequest($request, $route['route'], $params))
-                return [
-                    'class'  => $route['class'],
-                    'method' => $route['method'],
-                    'params' => $params ?? [],
-                ];
-
-        return null;
-    }
-
-    /**
-     * Check if the user's request matches the given route
-     *
-     * @param string                                $request Request URI
-     * @param \Playground\Routing\Attribute\Route   $route   Route attribute
-     * @param array|null                            $params    Array that will be filled with the parameters and their value provided in the request
-     *
-     * @return bool
-     */
-    private function matchRequest(string $request, Route $route, ?array &$params = []): bool {
-        $requestArray = explode('/', $request);
-        $pathArray = explode('/', $route->getPath());
-
-        // Remove empty values in arrays
-        $requestArray = array_values(array_filter($requestArray, 'strlen'));
-        $pathArray = array_values(array_filter($pathArray, 'strlen'));
-
-        if (
-            !(count($requestArray) === count($pathArray))
-            || !(in_array($_SERVER['REQUEST_METHOD'], $route->getMethods(), true))
-        )
-            return false;
-
-        foreach ($pathArray as $index => $urlPart) {
-            if (isset($requestArray[$index])) {
-                if (str_starts_with($urlPart, '{')) {
-                    $routeParameter = explode(' ', preg_replace('/{([\w\-%]+)(<(.+)>)?}/', '$1 $3', $urlPart));
-                    $paramName = $routeParameter[0];
-                    $paramRegExp = (empty($routeParameter[1]) ? '[\w\-]+' : $routeParameter[1]);
-
-                    if (preg_match('/^' . $paramRegExp . '$/', $requestArray[$index])) {
-                        $params[$paramName] = $requestArray[$index];
-
-                        continue;
-                    }
-                } elseif ($urlPart === $requestArray[$index])
-                    continue;
-            }
-
-            return false;
-        }
-
-        return true;
     }
 
     /**
@@ -224,5 +207,37 @@ class Router {
         }
 
         return $this->baseURI . $path;
+    }
+
+    /**
+     * Iterate over all the attributes of the controllers in order to find the first one corresponding to the request.
+     * If a match is found then an array is returned with the class, method and parameters, otherwise null is returned
+     *
+     * @param null|\Inane\Http\Request $request if not the current request
+     *
+     * @return null|array
+     *
+     * @throws \Inane\Stdlib\Exception\UnexpectedValueException
+     * @throws \Inane\Stdlib\Exception\BadMethodCallException
+     */
+    public function match(?Request $request = null): ?array {
+        if (is_null($request)) $request = new Request();
+        $uri = "{$request->getUri()}";
+
+        if (!empty($this->baseURI)) {
+            $baseURI = preg_quote($this->baseURI, '/');
+            $uri = preg_replace("/^{$baseURI}/", '', $uri);
+        }
+        $uri = (empty($uri) ? '/' : $uri);
+
+        foreach ($this->routes as $route)
+            if ($this->matchRequest($request, $route['route'], $params))
+                return [
+                    'class'  => $route['class'],
+                    'method' => $route['method'],
+                    'params' => $params ?? [],
+                ];
+
+        return null;
     }
 }

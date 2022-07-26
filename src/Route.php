@@ -10,11 +10,16 @@
  *
  * @license UNLICENSE
  * @license https://github.com/inanepain/stdlib/raw/develop/UNLICENSE UNLICENSE
+ *
+ * @version $Id$
+ * $Date$
  */
 
 declare(strict_types=1);
 
 namespace Inane\Routing;
+
+use Inane\Http\HttpMethod;
 
 use function array_combine;
 use function preg_match;
@@ -36,22 +41,44 @@ class Route {
     /**
      * @var array $parameters Keeps the parameters cached with the associated regex
      */
-    private array $parameters = [];
+    /**
+     * Parameter regex and value cache
+     *
+     * @var array
+     */
+    private array $parameters;
+    // private array $parameters = [];
 
     /**
      * Route Attribute
      *
      * @param string $path url
      * @param string $name route name
-     * @param array $methods http methods
+     * @param \Inane\Http\HttpMethod[] $methods http methods
      */
     public function __construct(
+        /**
+         * Route path
+         *
+         * @var string
+         */
         private string $path,
+        /**
+         * Route name
+         *
+         * Is set to $path if not set.
+         *
+         * @var string
+         */
         private string $name = '',
-        private array $methods = ['GET'],
+        /**
+         * Route methods
+         *
+         * @var \Inane\Http\HttpMethod[]
+         */
+        private array $methods = [HttpMethod::Get],
     ) {
-        if (empty($this->name))
-            $this->name = $this->path;
+        if (empty($name)) $this->name = $path;
     }
 
     /**
@@ -75,7 +102,7 @@ class Route {
     /**
      * Methods
      *
-     * @return array
+     * @return \Inane\Http\HttpMethod[]
      */
     public function getMethods(): array {
         return $this->methods;

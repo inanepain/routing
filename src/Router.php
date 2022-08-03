@@ -25,11 +25,14 @@ use function array_diff_key;
 use function array_filter;
 use function array_keys;
 use function array_values;
+use function class_exists;
 use function count;
 use function explode;
 use function implode;
 use function in_array;
+use function is_array;
 use function is_null;
+use function is_string;
 use function preg_match;
 use function preg_quote;
 use function preg_replace;
@@ -43,7 +46,7 @@ use const true;
  * Router
  *
  * @package Inane\Routing
- * @version 1.1.1
+ * @version 1.2.0
  */
 class Router {
     /**
@@ -58,17 +61,30 @@ class Router {
      * Allows to define with a single call to the constructor, all the configuration necessary for the operation
      * of the router
      *
-     * @param array  $controllers Classes containing Route attributes
+     * route config:
+     *  [
+     *      MainController::class,
+     *      'backups' => [
+     *          'route' => [
+     *              'path' => '/archive/{section}/year/{id<\d+>}',
+     *              'methods' => ['GET'],
+     *          ],
+     *          'class'  => HistoryController::class,
+     *          'method' => 'list',
+     *      ],
+     *  ]
+     *
+     * @param array  $routes Classes containing Route attributes or configurations
      * @param string $baseURI Part of the URI to exclude
      *
      * @throws \ReflectionException when the controller does not exist
      */
     public function __construct(
-        array $controllers = [],
+        array $routes = [],
         private string $baseURI = '',
     ) {
-        if (!empty($controllers))
-            $this->addRoutes($controllers);
+        if (!empty($routes))
+            $this->addRoutes($routes);
     }
 
     /**
@@ -130,29 +146,94 @@ class Router {
     }
 
     /**
-     * Breaks down each of the controllers given as arguments to extract the routes attributes, instantiate them and
-     * store them with the target class and method
+     * Add Route to router
      *
-     * @param array $controllers
+     * @since 1.2.0
+     *
+     * @param array|\Inane\Routing\Route $route
+     * @param string $class
+     * @param string $method
+     *
+     * @return void
+     */
+    protected function addRoute(array|Route $route, string $class, string $method): void {
+        if (is_array($route)) $route = new Route(...$route);
+
+        $this->routes[$route->getName()] = [
+            'class'  => $class,
+            'method' => $method,
+            'route'  => $route,
+        ];
+    }
+
+    /**
+     * Create route from attribute
+     *
+     * @since 1.2.0
+     *
+     * @param string $controller
+     *
+     * @return void
+     */
+    protected function parseRouteController(string $controller): void {
+        $reflectionController = new \ReflectionClass($controller);
+
+        foreach ($reflectionController->getMethods() as $reflectionMethod) {
+            $routeAttributes = $reflectionMethod->getAttributes(Route::class);
+
+            foreach ($routeAttributes as $routeAttribute) {
+                $route = $routeAttribute->newInstance();
+                $this->addRoute($route, $reflectionMethod->class, $reflectionMethod->name);
+            }
+        }
+    }
+
+    /**
+     * Create route from config
+     *
+     * @since 1.2.0
+     *
+     * @param string $config
+     *
+     * @return void
+     */
+    protected function parseRouteConfig(string $name, array $config = []): void {
+        $config['route']['name'] = $name;
+        $this->addRoute(...$config);
+    }
+
+    /**
+     * Adds routes from config array
+     *
+     * items:
+     * - controller using Route attributes
+     * - route config
+     *
+     * route config:
+     *  [
+     *      MainController::class,
+     *      'backups' => [
+     *          'route' => [
+     *              'path' => '/archive/{section}/year/{id<\d+>}',
+     *              'methods' => ['GET'],
+     *          ],
+     *          'class'  => HistoryController::class,
+     *          'method' => 'list',
+     *      ],
+     *  ]
+     *
+     * @param array $routes array of route configurations and controllers
      *
      * @throws \ReflectionException when the controller does not exist
      */
-    public function addRoutes(array $controllers): void {
-        foreach ($controllers as $controller) {
-            $reflectionController = new \ReflectionClass($controller);
-
-            foreach ($reflectionController->getMethods() as $reflectionMethod) {
-                $routeAttributes = $reflectionMethod->getAttributes(Route::class);
-
-                foreach ($routeAttributes as $routeAttribute) {
-                    $route = $routeAttribute->newInstance();
-                    $this->routes[$route->getName()] = [
-                        'class'  => $reflectionMethod->class,
-                        'method' => $reflectionMethod->name,
-                        'route'  => $route,
-                    ];
-                }
-            }
+    public function addRoutes(array $routes): void {
+        foreach($routes as $n => $r) {
+            if (is_array($r))
+                $this->parseRouteConfig($n, $r);
+            else if (is_string($r) && class_exists($r))
+                $this->parseRouteController($r);
+            // else
+                // invalid route
         }
     }
 

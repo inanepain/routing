@@ -54,7 +54,7 @@ class Route {
      *
      * @param string $path url
      * @param string $name route name
-     * @param \Inane\Http\HttpMethod[] $methods http methods
+     * @param \Inane\Http\HttpMethod[]|string[] $methods http methods
      */
     public function __construct(
         /**
@@ -79,6 +79,9 @@ class Route {
         private array $methods = [HttpMethod::Get],
     ) {
         if (empty($name)) $this->name = $path;
+
+        for ($i=0; $i < count($this->methods); $i++)
+            if (!$this->methods[$i] instanceof HttpMethod) $this->methods[$i] = HttpMethod::tryFrom($this->methods[$i]);
     }
 
     /**

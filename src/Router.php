@@ -43,7 +43,7 @@ use const true;
  * Router
  *
  * @package Inane\Routing
- * @version 1.1.0
+ * @version 1.1.1
  */
 class Router {
     /**
@@ -84,9 +84,7 @@ class Router {
      * @throws \Inane\Stdlib\Exception\BadMethodCallException
      */
     private function matchRequest(Request $request, Route $route, ?array &$params = []): bool {
-        $uri = "{$request->getUri()}";
-
-        $requestArray = explode('/', $uri);
+        $requestArray = explode('/', "$request");
         $pathArray = explode('/', $route->getPath());
 
         // Remove empty values in arrays
@@ -95,7 +93,7 @@ class Router {
 
         if (
             !(count($requestArray) === count($pathArray))
-            || !(in_array($request->getMethod(), $route->getMethods(), true))
+            || !(in_array($request->getHttpMethod(), $route->getMethods(), true))
         )
             return false;
 
@@ -222,7 +220,7 @@ class Router {
      */
     public function match(?Request $request = null): ?array {
         if (is_null($request)) $request = new Request();
-        $uri = "{$request->getUri()}";
+        $uri = "$request";
 
         if (!empty($this->baseURI)) {
             $baseURI = preg_quote($this->baseURI, '/');

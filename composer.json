@@ -1,42 +1,43 @@
 {
-	"name" : "inanepain/routing",
-	"description" : "HTTP routing using attributes.",
-	"type" : "library",
-	"license" : "UNLICENSE",
-	"authors" : [{
-			"name" : "Philip Michael Raab",
-			"email" : "peep@inane.co.za",
-			"role" : "Developer"
-		}
-	],
-	"homepage" : "http://vaieen.local:8000/inane/routing",
-	"readme": "README.md",
-	"support" : {
-		"email" : "peep@inane.co.za",
-		"issues" : "http://inane.co.za"
-	},
-	"keywords" : [
-		"inane",
-		"attribute",
-		"route",
-		"router",
-		"routing"
-	],
-	"autoload" : {
-		"psr-4" : {
-			"Inane\\Routing\\" : "src/"
-		}
-	},
-	"config": {
-        "preferred-install" : "dist",
-		"optimize-autoloader" : true,
-		"discard-changes" : true,
-		"sort-packages": true
+    "name": "inanepain/routing",
+    "description": "HTTP Routing using attributes.",
+    "type": "library",
+    "license": "UNLICENSE",
+    "homepage": "http://vaieen.local:3000/inane/routing",
+    "readme": "README.md",
+    "authors": [
+        {
+            "name": "Philip Michael Raab",
+            "email": "peep@inane.co.za",
+            "role": "Developer"
+        }
+    ],
+    "support": {
+        "email": "peep@inane.co.za",
+        "issues": "http://vaieen.local:3000/iane"
     },
-	"require-dev": {
+    "keywords": [
+        "inane",
+        "routing",
+        "attribute",
+        "route",
+        "router"
+    ],
+    "autoload": {
+        "psr-4": {
+            "Inane\\Routing\\": "src/"
+        }
     },
-	"require" : {
-		"php" : ">=8.1",
-		"inanepain/http": ">=0.1.3 || dev-develop || dev-master"
-	}
+    "config": {
+        "preferred-install": "dist",
+        "optimize-autoloader": true,
+        "discard-changes": true,
+        "sort-packages": true
+    },
+    "minimum-stability": "dev",
+    "require": {
+        "php": ">=8.1",
+        "inanepain/http": ">=0.1.3 || dev-master || dev-develop"
+    },
+    "require-dev": {}
 }

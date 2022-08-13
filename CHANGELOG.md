@@ -4,7 +4,7 @@
 
 ## HISTORY
 
-### current: 0.1.2 (2022 Aug xx)
+### 0.1.2 (2022 Aug 13)
 
 - router: addRoutes now also takes route config arrays
 - router: renamed `generateUrl` to `url`

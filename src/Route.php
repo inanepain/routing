@@ -29,14 +29,15 @@ use function preg_match_all;
  * Route
  *
  * @package Inane\Routing
- * @version 1.0.0
+ *
+ * @version 1.0.1
  */
 #[\Attribute(\Attribute::TARGET_METHOD)]
 class Route {
     /**
      * Default regular expression when none is defined in the parameter
      */
-    public const DEFAULT_REGEX = '[\w\-]+';
+    public const DEFAULT_REGEX = '[\w\-\.]+';
 
     /**
      * @var array $parameters Keeps the parameters cached with the associated regex
@@ -117,7 +118,7 @@ class Route {
      * @return bool
      */
     public function hasParams(): bool {
-        return preg_match('/{([\w\-%]+)(<(.+)>)?}/', $this->path);
+        return preg_match('/{([\w\-%]+)(<(.+)>)?}/', $this->path) !== false;
     }
 
     /**

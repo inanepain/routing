@@ -42,10 +42,16 @@ use const false;
 use const null;
 use const true;
 
+use Inane\Routing\Exception\{
+    InvalidArgumentException,
+    OutOfRangeException
+};
+
 /**
  * Router
  *
  * @package Inane\Routing
+ *
  * @version 1.2.0
  */
 class Router {
@@ -85,6 +91,63 @@ class Router {
     ) {
         if (!empty($routes))
             $this->addRoutes($routes);
+    }
+
+    /**
+     * Add Route to router
+     *
+     * @since 1.2.0
+     *
+     * @param array|\Inane\Routing\Route $route
+     * @param string $class
+     * @param string $method
+     *
+     * @return void
+     */
+    private function addRoute(array|Route $route, string $class, string $method): void {
+        if (is_array($route)) $route = new Route(...$route);
+
+        $this->routes[$route->getName()] = [
+            'class'  => $class,
+            'method' => $method,
+            'route'  => $route,
+        ];
+    }
+
+    /**
+     * Create route from attribute
+     *
+     * @since 1.2.0
+     *
+     * @param string $controller class to parse for Route Attribute
+     *
+     * @return void
+     */
+    private function parseRouteAttribute(string $controller): void {
+        $reflectionController = new \ReflectionClass($controller);
+
+        foreach ($reflectionController->getMethods() as $reflectionMethod) {
+            $routeAttributes = $reflectionMethod->getAttributes(Route::class);
+
+            foreach ($routeAttributes as $routeAttribute) {
+                $route = $routeAttribute->newInstance();
+                $this->addRoute($route, $reflectionMethod->class, $reflectionMethod->name);
+            }
+        }
+    }
+
+    /**
+     * Create route from config
+     *
+     * @since 1.2.0
+     *
+     * @param string $config
+     *
+     * @return void
+     */
+    private function parseRouteConfig(string $name, array $config = []): void {
+        $config['route']['name'] = $name;
+        $this->addRoute(...$config);
     }
 
     /**
@@ -136,70 +199,18 @@ class Router {
     }
 
     /**
-     * Define the base URI in order to exclude it in the route correspondence, useful when the project is called from a
-     * sub-folder
+     * Define the base URI in order to exclude it in the route correspondence.
+     *
+     * Useful when the project is called from a sub-folder.
      *
      * @param string $baseURI Part of the URI to exclude
+     *
+     * @return \Inane\Routing\Router router
      */
-    public function setBaseURI(string $baseURI): void {
+    public function setBaseURI(string $baseURI): self {
         $this->baseURI = $baseURI;
-    }
 
-    /**
-     * Add Route to router
-     *
-     * @since 1.2.0
-     *
-     * @param array|\Inane\Routing\Route $route
-     * @param string $class
-     * @param string $method
-     *
-     * @return void
-     */
-    protected function addRoute(array|Route $route, string $class, string $method): void {
-        if (is_array($route)) $route = new Route(...$route);
-
-        $this->routes[$route->getName()] = [
-            'class'  => $class,
-            'method' => $method,
-            'route'  => $route,
-        ];
-    }
-
-    /**
-     * Create route from attribute
-     *
-     * @since 1.2.0
-     *
-     * @param string $controller
-     *
-     * @return void
-     */
-    protected function parseRouteController(string $controller): void {
-        $reflectionController = new \ReflectionClass($controller);
-
-        foreach ($reflectionController->getMethods() as $reflectionMethod) {
-            $routeAttributes = $reflectionMethod->getAttributes(Route::class);
-
-            foreach ($routeAttributes as $routeAttribute) {
-                $route = $routeAttribute->newInstance();
-                $this->addRoute($route, $reflectionMethod->class, $reflectionMethod->name);
-            }
-        }
-    }
-
-    /**
-     * Create route from config
-     *
-     * @since 1.2.0
-     *
-     * @param string $config
-     *
-     * @return void
-     */
-    protected function parseRouteConfig(string $name, array $config = []): void {
-        $config['route']['name'] = $name;
-        $this->addRoute(...$config);
+        return $this;
     }
 
     /**
@@ -224,33 +235,39 @@ class Router {
      *
      * @param array $routes array of route configurations and controllers
      *
+     * @return \Inane\Routing\Router router
+     *
      * @throws \ReflectionException when the controller does not exist
      */
-    public function addRoutes(array $routes): void {
+    public function addRoutes(array $routes): self {
         foreach($routes as $n => $r) {
             if (is_array($r))
                 $this->parseRouteConfig($n, $r);
             else if (is_string($r) && class_exists($r))
-                $this->parseRouteController($r);
+                $this->parseRouteAttribute($r);
             // else
                 // invalid route
         }
+
+        return $this;
     }
 
     /**
-     * Generate a URL according to the name of the route
+     * Builds a URL for the routeName and parameters supplied
      *
-     * @param string $routeName  The name of the route to generate
-     * @param array  $parameters The parameters to provide if it is a dynamic route
+     * @since 1.2.0
      *
-     * @return string
+     * @param string $routeName  name of route to build
+     * @param array  $parameters used to populate route
      *
-     * @throws \OutOfRangeException If route does not exist
-     * @throws \InvalidArgumentException If not all route parameters are provided
+     * @return string url
+     *
+     * @throws \Inane\Routing\Exception\OutOfRangeException If route does not exist
+     * @throws \Inane\Routing\Exception\InvalidArgumentException If not all route parameters are provided
      */
-    public function generateUrl(string $routeName, array $parameters = []): string {
+    public function url(string $routeName, array $parameters = []): string {
         if (!isset($this->routes[$routeName]))
-            throw new \OutOfRangeException(sprintf(
+            throw new OutOfRangeException(sprintf(
                 'The route does not exist. Check that the given route name "%s" is valid.',
                 $routeName
             ));
@@ -264,7 +281,7 @@ class Router {
 
             // Checks that all parameters are provided
             if ($missingParameters = array_diff_key($routeParams, $parameters))
-                throw new \InvalidArgumentException(sprintf(
+                throw new InvalidArgumentException(sprintf(
                     'The following parameters are missing for generating the route "%s": %s',
                     $routeName,
                     implode(', ', array_keys($missingParameters))
@@ -276,7 +293,7 @@ class Router {
                 $regex = (!empty($regex) ? $regex : Route::DEFAULT_REGEX);
 
                 if (!preg_match("/^$regex$/", $parameters[$paramName]))
-                    throw new \InvalidArgumentException(sprintf(
+                    throw new InvalidArgumentException(sprintf(
                         'The "%s" route parameter value given does not match the regular expression',
                         $paramName
                     ));
@@ -318,5 +335,25 @@ class Router {
                 ];
 
         return null;
+    }
+
+    /** DEPRECATED */
+    /**
+     * Generate a URL according to the name of the route
+     *
+     * @deprecated 1.2.0
+     *
+     * @see url()
+     *
+     * @param string $routeName  The name of the route to generate
+     * @param array  $parameters The parameters to provide if it is a dynamic route
+     *
+     * @return string
+     *
+     * @throws \Inane\Routing\Exception\OutOfRangeException If route does not exist
+     * @throws \Inane\Routing\Exception\InvalidArgumentException If not all route parameters are provided
+     */
+    public function generateUrl(string $routeName, array $parameters = []): string {
+        return $this->url($routeName, $parameters);
     }
 }

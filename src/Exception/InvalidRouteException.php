@@ -19,14 +19,16 @@ declare(strict_types=1);
 
 namespace Inane\Routing\Exception;
 
-use Inane\Stdlib\Exception\OutOfRangeException as InaneOutOfRangeException;
-
 /**
- * Exception thrown when an illegal index was requested. This represents errors that should be detected at compile time.
+ * Exception thrown when variable is not a Route
  *
  * @package Inane\Routing\Exception
+ *
  * @implements \Inane\Stdlib\Exception\ExceptionInterface
+ *
  * @version 0.1.0
  */
-class OutOfRangeException extends InaneOutOfRangeException {
+class InvalidRouteException extends InvalidArgumentException {
+    // base code for invalid argument exceptions
+    protected $code = 755;
 }

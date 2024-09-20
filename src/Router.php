@@ -54,7 +54,7 @@ use Inane\Routing\Exception\{
  *
  * @package Inane\Routing
  *
- * @version 1.2.0
+ * @version 1.3.0
  */
 class Router {
     /**
@@ -314,8 +314,12 @@ class Router {
     }
 
     /**
+     * Returns the route that corresponds to the request.
+     *
      * Iterate over all the attributes of the controllers in order to find the first one corresponding to the request.
-     * If a match is found then an array is returned with the class, method and parameters, otherwise null is returned
+     * If a match is found then an array is returned with the class, method and parameters, otherwise null is returned.
+     *
+     * @since 0.1.3 Route & uri are now returned as part of the array
      *
      * @param null|\Inane\Http\Request $request if not the current request
      *
@@ -335,12 +339,11 @@ class Router {
         $uri = (empty($uri) ? '/' : $uri);
 
         foreach ($this->routes as $route)
-            if ($this->matchRequest($request, $route['route'], $params))
-                return [
-                    'class'  => $route['class'],
-                    'method' => $route['method'],
-                    'params' => $params ?? [],
-                ];
+            if ($this->matchRequest($request, $route['route'], $params)) {
+				$route['params'] = $params ?? [];
+				$route['uri'] = $uri;
+				return $route;
+            }
 
         return null;
     }

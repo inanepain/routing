@@ -24,7 +24,7 @@ use Inane\Stdlib\Exception\InvalidArgumentException as InaneInvalidArgumentExcep
 /**
  * Exception thrown if an argument is not of the expected type.
  *
- * @package Inane\Exception
+ * @package Inane\Routing\Exception
  * @implements \Inane\Stdlib\Exception\ExceptionInterface
  * @version 0.3.0
  */

@@ -18,7 +18,7 @@ Hope that gets you thinking about **Attributes** in a new, more realistic manor 
 
 ## Usage
 
-Quick overview showing the bits relating to the `Route` `Attribute` in two examples. Neither are complete, though the simple example would run with minimum fuss. Anyway, it's probably overkill anyway.
+Quick overview showing the bits relating to the `Route` `Attribute` in two examples. Neither are complete, though the simple example would run with minimum fuss. Check the Appendix for the `.htaccess` file you will need to use with the `index.php` file.
 
 ## Example: Simple
 
@@ -162,4 +162,35 @@ class Application {
 
     ...
 }
+```
+
+## Appendix: .htaccess
+
+You will also need to do some magic in your `.htaccess` file so that `index.php` handles all requests.
+
+```appache
+RewriteEngine On
+# The following rule tells Apache that if the requested filename exists, simply serve it.
+RewriteCond %{REQUEST_FILENAME} -s [OR]
+RewriteCond %{REQUEST_FILENAME} -l [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^.*$ - [L]
+
+# The following rewrites all other queries to index.php. The 
+# condition ensures that if you are using Apache aliases to do
+# mass virtual hosting or installed the project in a subdirectory,
+# the base path will be prepended to allow proper resolution of
+# the index.php file; it will work in non-aliased environments
+# as well, providing a safe, one-size fits all solution.
+RewriteCond %{REQUEST_URI}::$1 ^(/.+)/(.*)::\2$
+RewriteRule ^(.*) - [E=BASE:%1]
+RewriteRule ^(.*)$ %{ENV:BASE}/index.php [L]
+
+<Limit GET HEAD POST PUT DELETE OPTIONS>
+# Deprecated apache 2.2 syntax:
+# Order Allow,Deny
+# Allow from all
+# Apache > 2.4 requires:
+Require all granted
+</Limit>
 ```

@@ -20,6 +20,7 @@ declare(strict_types=1);
 namespace Inane\Routing;
 
 use Inane\Http\Request;
+use Inane\Stdlib\Options;
 
 use function array_diff_key;
 use function array_filter;
@@ -44,6 +45,7 @@ use const true;
 
 use Inane\Routing\Exception\{
     InvalidArgumentException,
+    InvalidRouteException,
     OutOfRangeException
 };
 
@@ -52,7 +54,7 @@ use Inane\Routing\Exception\{
  *
  * @package Inane\Routing
  *
- * @version 1.2.0
+ * @version 1.3.0
  */
 class Router {
     /**
@@ -141,13 +143,14 @@ class Router {
      *
      * @since 1.2.0
      *
-     * @param string $config
+     * @param string $name
+     * @param array|\Inane\Stdlib\Options $config
      *
      * @return void
      */
-    private function parseRouteConfig(string $name, array $config = []): void {
+    private function parseRouteConfig(string $name, array|Options $config = []): void {
         $config['route']['name'] = $name;
-        $this->addRoute(...$config);
+        $this->addRoute(...(is_array($config) ? $config : $config->toArray()));
     }
 
     /**
@@ -233,20 +236,25 @@ class Router {
      *      ],
      *  ]
      *
-     * @param array $routes array of route configurations and controllers
+     * @param array|Inane\Stdlib\Options $routes array of route configurations and controllers
      *
      * @return \Inane\Routing\Router router
      *
      * @throws \ReflectionException when the controller does not exist
      */
-    public function addRoutes(array $routes): self {
+    public function addRoutes(array|Options $routes): self {
         foreach($routes as $n => $r) {
-            if (is_array($r))
+            if (is_array($r) || $r instanceof Options)
                 $this->parseRouteConfig($n, $r);
             else if (is_string($r) && class_exists($r))
                 $this->parseRouteAttribute($r);
-            // else
-                // invalid route
+            else {
+                $message = 'Invalid Route: ';
+                if (is_string($r)) $message .= $r;
+                else $message .= 'UNKNOWN';
+
+                throw new InvalidRouteException($message);
+            }
         }
 
         return $this;
@@ -306,8 +314,12 @@ class Router {
     }
 
     /**
+     * Returns the route that corresponds to the request.
+     *
      * Iterate over all the attributes of the controllers in order to find the first one corresponding to the request.
-     * If a match is found then an array is returned with the class, method and parameters, otherwise null is returned
+     * If a match is found then an array is returned with the class, method and parameters, otherwise null is returned.
+     *
+     * @since 0.1.3 Route & uri are now returned as part of the array
      *
      * @param null|\Inane\Http\Request $request if not the current request
      *
@@ -327,33 +339,12 @@ class Router {
         $uri = (empty($uri) ? '/' : $uri);
 
         foreach ($this->routes as $route)
-            if ($this->matchRequest($request, $route['route'], $params))
-                return [
-                    'class'  => $route['class'],
-                    'method' => $route['method'],
-                    'params' => $params ?? [],
-                ];
+            if ($this->matchRequest($request, $route['route'], $params)) {
+				$route['params'] = $params ?? [];
+				$route['uri'] = $uri;
+				return $route;
+            }
 
         return null;
-    }
-
-    /** DEPRECATED */
-    /**
-     * Generate a URL according to the name of the route
-     *
-     * @deprecated 1.2.0
-     *
-     * @see url()
-     *
-     * @param string $routeName  The name of the route to generate
-     * @param array  $parameters The parameters to provide if it is a dynamic route
-     *
-     * @return string
-     *
-     * @throws \Inane\Routing\Exception\OutOfRangeException If route does not exist
-     * @throws \Inane\Routing\Exception\InvalidArgumentException If not all route parameters are provided
-     */
-    public function generateUrl(string $routeName, array $parameters = []): string {
-        return $this->url($routeName, $parameters);
     }
 }

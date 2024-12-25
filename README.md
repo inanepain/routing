@@ -4,6 +4,8 @@
 
 HTTP Routing using php **Attributes**.
 
+NOTE: examples updated to use RouteMatch.
+
 ## Intro: Attributes
 
 What is an **Attribute**? It's a class just like any other class only with the `Attribute` **Attribute**. So why are you treating it more like an `enum` or `Map` that can only hold a few values describing something? You don't do it with the classes you uses your custom attributes on! But I don't blame you, it all comes down to some pour choices in wording used by the documentation.
@@ -70,8 +72,8 @@ $router = new Router();
 $router->addRoutes([MainController::class]);
 
 if ($match = $router->match()) {
-    $controller = new $match['class']();
-    $controller->{$match['method']}($match['params']);
+    $controller = new $match->class();
+    $controller->{$match->method}($match->params);
 } else {
     throw new Exception('Request Error: Unmatched `file` or `route`!');
 }
@@ -151,10 +153,11 @@ class Application {
     public function run(): void {
         ...
         if ($match = $this->router->match()) {
-            $controller = new $match['class']($match['params']);
+            $controller = new $match->class($match['params']);
             $data = $controller->{$match['method']}();
             ...
-            $body = $this->renderer->render($template, $data);
+            // since 1.4.0: using the RouteMatch we can now easily get the template
+            $body = $this->renderer->render($match->template, $data);
             ...
         }
         ...
@@ -176,7 +179,7 @@ RewriteCond %{REQUEST_FILENAME} -l [OR]
 RewriteCond %{REQUEST_FILENAME} -d
 RewriteRule ^.*$ - [L]
 
-# The following rewrites all other queries to index.php. The 
+# The following rewrites all other queries to index.php. The
 # condition ensures that if you are using Apache aliases to do
 # mass virtual hosting or installed the project in a subdirectory,
 # the base path will be prepended to allow proper resolution of

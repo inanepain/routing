@@ -4,7 +4,11 @@
 
 ## HISTORY
 
-### develop (2024 Sep xx)
+### 1.4.0 (2024 Dec 25)
+
+ - RouteMatch: this long awaited class finally joins
+
+### 0.1.3 (2024 Sep 20)
 
  - router: config parser can now also take an Options object
  - Throw `InvalidRouteException` when parsing invalid config

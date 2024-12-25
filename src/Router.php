@@ -54,7 +54,7 @@ use Inane\Routing\Exception\{
  *
  * @package Inane\Routing
  *
- * @version 1.3.0
+ * @version 1.4.0
  */
 class Router {
     /**
@@ -320,15 +320,16 @@ class Router {
      * If a match is found then an array is returned with the class, method and parameters, otherwise null is returned.
      *
      * @since 0.1.3 Route & uri are now returned as part of the array
+     * @since 1.4.0 methid returns a RouteMatch object
      *
      * @param null|\Inane\Http\Request $request if not the current request
      *
-     * @return null|array
+     * @return null|\Inane\Routing\RouteMatch
      *
      * @throws \Inane\Stdlib\Exception\UnexpectedValueException
      * @throws \Inane\Stdlib\Exception\BadMethodCallException
      */
-    public function match(?Request $request = null): ?array {
+    public function match(?Request $request = null): ?RouteMatch {
         if (is_null($request)) $request = new Request();
         $uri = "$request";
 
@@ -342,7 +343,8 @@ class Router {
             if ($this->matchRequest($request, $route['route'], $params)) {
 				$route['params'] = $params ?? [];
 				$route['uri'] = $uri;
-				return $route;
+
+				return new RouteMatch($route);
             }
 
         return null;

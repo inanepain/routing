@@ -39,6 +39,9 @@ use function preg_quote;
 use function preg_replace;
 use function sprintf;
 use function str_starts_with;
+use function str_contains;
+use function str_replace;
+use function parse_str;
 use const false;
 use const null;
 use const true;
@@ -90,6 +93,7 @@ class Router {
     public function __construct(
         array $routes = [],
         private string $baseURI = '',
+        protected(set) bool $splitQuerystring = false,
     ) {
         if (!empty($routes))
             $this->addRoutes($routes);
@@ -166,7 +170,16 @@ class Router {
      * @throws \Inane\Stdlib\Exception\BadMethodCallException
      */
     private function matchRequest(Request $request, Route $route, ?array &$params = []): bool {
-        $requestArray = explode('/', "$request");
+        $url = "$request";
+        $query = [];
+        if ($this->splitQuerystring && str_contains($url, '?')) {
+            $query = parse_url("$request")['query'];
+            $url = str_replace("?$query", '', $url);
+            parse_str($query, $query);
+            $params['query-string'] = $query;
+        }
+
+        $requestArray = explode('/', $url);
         $pathArray = explode('/', $route->getPath());
 
         // Remove empty values in arrays

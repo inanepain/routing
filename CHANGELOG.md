@@ -4,6 +4,10 @@
 
 ## HISTORY
 
+### 1.5.0-dev (2025 Apr xx)
+
+- update: route methods now defaults to all
+
 ### 1.4.0 (2024 Dec 25)
 
  - RouteMatch: this long awaited class finally joins

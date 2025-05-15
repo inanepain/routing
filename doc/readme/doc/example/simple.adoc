@@ -1,0 +1,84 @@
+= Example: Simple
+:author: Philip Michael Raab
+:email: <philip@cathedral.co.za>
+:keywords: routing, router, route, attribute
+:description: HTTP Routing using attributes.
+:revnumber: 1.4.0
+:revdate: 2025-04-09
+:copyright: Unlicense
+:experimental:
+:hide-uri-scheme:
+:icons: font
+:source-highlighter: highlight.js
+:toc: auto
+:sectanchors:
+
+Super simple example using *php* built in web server. +
+We create a class, let's call it *MainController.php*, and add `Route` *attributes* to the methods we want routes to. The *path* is matched against the *url* with *regex*.
+
+.MainController.php
+[source,php]
+----
+class MainController {
+    ...
+
+    #[Route(path: '/', name: 'home')]
+    public function home(): void {
+        ...
+        echo <<<HTML
+...
+HTML;
+    }
+
+    ...
+
+    #[Route(path: '/product/{product}', name: 'product', )]
+    public function productTask(array $params): void {
+        $sql = "...where product_id = '{$params['product']}'";
+        ...
+        echo <<<HTML
+...
+HTML;
+    }
+
+    ...
+}
+----
+
+Our "application" sits in *index.php* which will pass through existing files and try route everything else. +
+We simple add our *MainController* to the `Router` and then check for a match.
+
+.index.php
+[source,php]
+----
+use App\Controller\MainController;
+use Inane\Routing\Router;
+
+require_once 'vendor/autoload.php';
+
+$file = 'public' . $_SERVER['REQUEST_URI'];
+
+// Server existing files in web dir
+if (file_exists($file) && !is_dir($file)) return false;
+
+$router = new Router();
+// Add the controllers to the Router
+$router->addRoutes([MainController::class]);
+
+if ($match = $router->match()) { // Check for a Route Match
+    // create the controller
+    $controller = new $match->class();
+    // and call the method with paramaters.
+    $controller->{$match->method}($match->params);
+} else { // Otherwise do what ever else, we'll through an error.
+    throw new Exception('Request Error: Unmatched `file` or `route`!');
+}
+----
+
+Now let's file up php's built in server:
+
+.php built-in server
+`php -S localhost:8080 -t public index.php`
+
+All thay's left is to visit the url in your favorit browser. +
+And that's a real basic emample of how it's and it doesn't really get much more complex.

@@ -1,0 +1,19 @@
+= Install
+:author: Philip Michael Raab
+:email: <philip@cathedral.co.za>
+:keywords: routing, router, route, attribute
+:description: HTTP Routing using attributes.
+:revnumber: 1.4.0
+:revdate: 2025-04-09
+:copyright: Unlicense
+:experimental:
+:hide-uri-scheme:
+:icons: font
+:source-highlighter: highlight.js
+:toc: auto
+:sectanchors:
+
+Installtion is as easy as asking composer to add the package as a requirement.
+
+.require via composer
+`composer require inanepain/routing`

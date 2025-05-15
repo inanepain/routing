@@ -1,0 +1,26 @@
+= inanepain/routing
+:author: Philip Michael Raab
+:email: <philip@cathedral.co.za>
+:keywords: routing, router, route, attribute
+:description: HTTP Routing using attributes.
+:revnumber: 1.4.0
+:revdate: 2025-04-09
+:copyright: Unlicense
+:experimental:
+:hide-uri-scheme:
+:icons: font
+:source-highlighter: highlight.js
+:toc: auto
+:sectanchors:
+:toclevels: 3
+
+version: $Id$ ($Date$)
+
+NOTE: examples updated to use RouteMatch.
+
+Add routing to your application by simply using attributes on your methods to configure the route.
+
+include::./doc/install.adoc[leveloffset=+1]
+include::./doc/attributes.adoc[leveloffset=+1]
+include::./doc/usage.adoc[leveloffset=+1]
+include::./doc/appendix.adoc[leveloffset=+1]

@@ -1,0 +1,111 @@
+= Example: Complete
+:author: Philip Michael Raab
+:email: <philip@cathedral.co.za>
+:keywords: routing, router, route, attribute
+:description: HTTP Routing using attributes.
+:revnumber: 1.4.0
+:revdate: 2025-04-09
+:copyright: Unlicense
+:experimental:
+:hide-uri-scheme:
+:icons: font
+:source-highlighter: highlight.js
+:toc: auto
+:sectanchors:
+
+Now let's try a slightly more complex example.
+
+== The various pieces
+
+Again we setup our routes by using attributes on the controller methods.
+
+.IndexController.php
+[source,php]
+----
+class IndexController extends AbstractController {
+    ...
+
+    #[Route(path: '/', name: 'home')]
+    public function indexTask(): array {
+        ...
+    }
+
+    ...
+
+    #[Route(path: '/product/{product}', name: 'product', )]
+    public function productTask(): array {
+        ...
+    }
+
+    ...
+
+    #[Route(path: '/product/{product}/review/{id<\d+>}', name: 'product-review')]
+    public function reviewTask(): array {
+        ...
+    }
+
+    ...
+}
+----
+
+But now we're adding a view template to the mix. Not that this does much but it's just for show. So here we render an anchor.
+
+.index.phtml (view template)
+[source,phtml]
+----
+...
+<a class="menu-item" href="<?=$route->url('product', ['product' => $item['id']])?>"><?=$item['name_long']?></a>
+...
+----
+
+That should give us this.
+
+.website (rendered view)
+[source,html]
+----
+<a class="menu-item" href="/product/mega-maid">Mega Maid (Household Robot Helper)</a>
+----
+
+Great.
+
+== Putting it all together
+
+Chuck that all into an app, I'm only showing the parts relavent to the routing.
+
+.Application.php
+[source,php]
+----
+class Application {
+    ...
+
+    protected function initialise(): void {
+        ...
+        $this->router = new Router([
+            IndexController::class,
+            ...
+            WhoopsController::class,
+            ...
+        ]);
+        ...
+    }
+
+    ...
+
+    public function run(): void {
+        ...
+        if ($match = $this->router->match()) {
+            $controller = new $match->class($match['params']);
+            $data = $controller->{$match['method']}();
+            ...
+            // since 1.4.0: using the RouteMatch we can now easily get the template
+            $body = $this->renderer->render($match->template, $data);
+            ...
+        }
+        ...
+    }
+
+    ...
+}
+----
+
+... and you're of to the races.

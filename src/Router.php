@@ -313,13 +313,13 @@ class Router {
             foreach ($routeParams as $paramName => $regex) {
                 $regex = (!empty($regex) ? $regex : Route::DEFAULT_REGEX);
 
-                if (!preg_match("/^$regex$/", $parameters[$paramName]))
+                if (!preg_match("/^$regex$/", (string) $parameters[$paramName]))
                     throw new InvalidArgumentException(sprintf(
                         'The "%s" route parameter value given does not match the regular expression',
                         $paramName
                     ));
 
-                $path = preg_replace('/{' . $paramName . '(<.+>)?}/', $parameters[$paramName], $path);
+                $path = preg_replace('/{' . $paramName . '(<.+>)?}/', (string) $parameters[$paramName], $path);
             }
         }
 

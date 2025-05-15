@@ -13,3 +13,4 @@
 
 * *update*: `Route::method` property now defaults to *ALL* http commands.
 * *update*: *QueryString* handling getting an overhaul and new features.
+* *fix*: proper uri request to match fix in *inanepain/http*

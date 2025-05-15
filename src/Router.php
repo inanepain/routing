@@ -170,7 +170,7 @@ class Router {
      * @throws \Inane\Stdlib\Exception\BadMethodCallException
      */
     private function matchRequest(Request $request, Route $route, ?array &$params = []): bool {
-        $url = "$request";
+        $url = $request->getUri()->getPath();
         $query = [];
         if ($this->splitQuerystring && str_contains($url, '?')) {
             $query = parse_url("$request")['query'];
@@ -344,7 +344,7 @@ class Router {
      */
     public function match(?Request $request = null): ?RouteMatch {
         if (is_null($request)) $request = new Request();
-        $uri = "$request";
+        $uri = $request->getUri()->getPath();
 
         if (!empty($this->baseURI)) {
             $baseURI = preg_quote($this->baseURI, '/');

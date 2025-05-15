@@ -10,6 +10,8 @@ Version: $Id$ ($Date$)
 - **update**: **QueryString** handling getting an overhaul and new
   features.
 
+- **fix**: proper uri request to match fix in **inanepain/http**
+
 ## 1.4.0 (2024 Dec 25)
 
 - **RouteMatch**: this long awaited class finally joins

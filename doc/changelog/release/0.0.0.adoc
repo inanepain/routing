@@ -1,0 +1,15 @@
+= 1.5.0-dev @2025 May xx
+:author: Philip Michael Raab
+:email: <philip@cathedral.co.za>
+:revnumber: 1.5.0
+:revdate: 2025-05-01
+:copyright: Unlicense
+:experimental:
+:icons: font
+:source-highlighter: highlight.js
+:sectnums!:
+:toc: auto
+:sectanchors:
+
+* *update*: `Route::method` property now defaults to *ALL* http commands.
+* *update*: *QueryString* handling getting an overhaul and new features.

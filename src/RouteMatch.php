@@ -21,11 +21,11 @@ namespace Inane\Routing;
 
 use Inane\Stdlib\Options;
 
-use function is_null;
+use function array_pop;
 use function explode;
 use function implode;
+use function is_null;
 use function str_replace;
-use function array_pop;
 
 /**
  * RouteMatch
@@ -40,12 +40,22 @@ use function array_pop;
 class RouteMatch {
 	private Options $routeMatch;
 
+	/**
+	 * Controller class fully qualified
+	 *
+	 * @var string
+	 */
 	public string $class {
 		get {
 			return $this->routeMatch->class;
 		}
 	}
 
+	/**
+	 * Controller method called
+	 *
+	 * @var string
+	 */
 	public string $method {
 		get {
 			return $this->routeMatch->method;
@@ -64,7 +74,7 @@ class RouteMatch {
 	}
 
 	/**
-	 * parameters from the uri
+	 * parameters from the uri path specified by regex
 	 *
 	 * @var array
 	 */
@@ -75,7 +85,11 @@ class RouteMatch {
 	}
 
 	/**
-	 * Route matched agains
+	 * The matched Route
+	 *
+	 * - path - route path regex
+	 * - name - route name
+	 * - methods - allowed http methods
 	 *
 	 * @var Route
 	 */
@@ -99,10 +113,10 @@ class RouteMatch {
 	/**
 	 * RouteMatch constructor
 	 *
-	 * @param array $route
-	 * @param callable|null $templateParser
+	 * @param array $route route match
+	 * @param callable|\Closure|null $templateParser
 	 */
-	public function __construct(array $route, ?callable $templateParser = null) {
+	public function __construct(array $route, callable|\Closure|null $templateParser = null) {
 		$route['templateParser'] = !is_null($templateParser) ? $templateParser : function(string $class, string $method) {
 			$path = explode('\\', $class);
 			return implode(DIRECTORY_SEPARATOR, [

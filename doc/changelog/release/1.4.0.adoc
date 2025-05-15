@@ -1,0 +1,14 @@
+= 1.4.0 (2024 Dec 25)
+:author: Philip Michael Raab
+:email: <philip@cathedral.co.za>
+:revnumber: 1.4.0
+:revdate: 2024 Dec 25
+:copyright: Unlicense
+:experimental:
+:icons: font
+:source-highlighter: highlight.js
+:sectnums!:
+:toc: auto
+:sectanchors:
+
+* *RouteMatch*: this long awaited class finally joins

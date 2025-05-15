@@ -1,0 +1,21 @@
+= Overview of Attributes
+:author: Philip Michael Raab
+:email: <philip@cathedral.co.za>
+:keywords: routing, router, route, attribute
+:description: HTTP Routing using attributes.
+:revnumber: 1.4.0
+:revdate: 2025-04-09
+:copyright: Unlicense
+:experimental:
+:hide-uri-scheme:
+:icons: font
+:source-highlighter: highlight.js
+:toc: auto
+:sectanchors:
+
+What is an *Attribute*? It's a class just like any other class only with the `Attribute` *Attribute*. So why are you treating it more like an `enum` or `Map` that can only hold a few values describing something? You don't do it with the classes you uses your custom attributes on! But I don't blame you, it all comes down to some pour choices in wording used by the documentation.
+
+So how should I be think of *Attributes*? As classes naturally. Classes to object that get things done to be more exact. That `#[Route(name: 'home', path: '/')]` like might make more sense when you start looking at it like this: `$route = new Route('/', 'home');`. Here a fun experiment to try; remove the `Attribute` from `Route` then have the `Router` take an array of `Route` parameters as argument. Easy, wasn't it and you understand Attributes and with practice you spot many more classes you can use as such.
+
+Hope that gets you thinking about *Attributes* in a new, more realistic manor that leads to you adding that `#[Attribute]` line to a good many more classes.
+

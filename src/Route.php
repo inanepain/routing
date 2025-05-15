@@ -30,7 +30,7 @@ use function preg_match_all;
  *
  * @package Inane\Routing
  *
- * @version 1.0.1
+ * @version 1.1.0
  */
 #[\Attribute(\Attribute::TARGET_METHOD)]
 class Route {
@@ -52,6 +52,8 @@ class Route {
 
     /**
      * Route Attribute
+     *
+     * @since 1.1.0 methods defaults to all methods
      *
      * @param string $path url
      * @param string $name route name
@@ -77,7 +79,7 @@ class Route {
          *
          * @var \Inane\Http\HttpMethod[]
          */
-        private array $methods = [HttpMethod::Get],
+        private array $methods = [HttpMethod::Get, HttpMethod::Post, HttpMethod::Put, HttpMethod::Delete, HttpMethod::Patch, HttpMethod::Options],
     ) {
         if (empty($name)) $this->name = $path;
 

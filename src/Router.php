@@ -327,6 +327,28 @@ class Router {
     }
 
     /**
+     * property - gets extra route property information
+     * 
+     * @since 0.1.0
+     *
+     * @param string $routeName  name of route to build
+     * @param string $property  the extra route info property name
+     * @param array $params params to fill out property value (if its a template)
+     *
+     * @return string extra route info property value OR empty string if not valid.
+     */
+    public function routeProperty(string $routeName, string $property, array $params = []): string {
+        if (!isset($this->routes[$routeName]))
+            throw new OutOfRangeException(sprintf(
+                'The route does not exist. Check that the given route name "%s" is valid.',
+                $routeName
+            ));
+
+        /** @var Route $route */
+        return ($this->routes[$routeName]['route'])->property($property, $params);
+    }
+
+    /**
      * Returns the route that corresponds to the request.
      *
      * Iterate over all the attributes of the controllers in order to find the first one corresponding to the request.
@@ -352,13 +374,17 @@ class Router {
         }
         $uri = (empty($uri) ? '/' : $uri);
 
-        foreach ($this->routes as $route)
+        foreach ($this->routes as $route){
+            // dd($route, 'route for matching');
             if ($this->matchRequest($request, $route['route'], $params)) {
 				$route['params'] = $params ?? [];
 				$route['uri'] = $uri;
 
-				return new RouteMatch($route);
-            }
+                $rm = new RouteMatch($route);
+                // dd($rm, 'Matched Route');
+				// return new RouteMatch($route);
+				return $rm;
+            }}
 
         return null;
     }

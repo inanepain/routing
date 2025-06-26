@@ -111,6 +111,20 @@ class RouteMatch {
 	}
 
 	/**
+     * property - gets extra route property information
+     * 
+     * @since 0.1.0
+     *
+     * @param string $name the extra route info property name
+	 * @param array $params params to fill out property value (if its a template)
+     *
+     * @return string extra route info property value OR empty string if not valid.
+     */
+	public function routeProperty(string $name, array $params = []): string {
+	    return $this->route->property($name, $params);
+	}
+
+	/**
 	 * RouteMatch constructor
 	 *
 	 * @param array $route route match

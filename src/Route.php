@@ -20,6 +20,7 @@ declare(strict_types=1);
 namespace Inane\Routing;
 
 use Inane\Http\HttpMethod;
+use Inane\Stdlib\Options;
 
 use function array_combine;
 use function preg_match;
@@ -30,7 +31,7 @@ use function preg_match_all;
  *
  * @package Inane\Routing
  *
- * @version 1.1.0
+ * @version 1.2.0
  */
 #[\Attribute(\Attribute::TARGET_METHOD)]
 class Route {
@@ -48,7 +49,6 @@ class Route {
      * @var array
      */
     private array $parameters;
-    // private array $parameters = [];
 
     /**
      * Route Attribute
@@ -75,15 +75,32 @@ class Route {
          */
         private string $name = '',
         /**
+         * Route label
+         *
+         * a friendly name for the route, used for links.
+         *
+         * @var string
+         */
+        private string $label = '',
+        /**
          * Route methods
          *
          * @var \Inane\Http\HttpMethod[]
          */
         private array $methods = [HttpMethod::Get, HttpMethod::Post, HttpMethod::Put, HttpMethod::Delete, HttpMethod::Patch, HttpMethod::Options],
+        /**
+         * Route extra
+         *
+         * Optional and totally custom values to be assigned to the route.
+         *
+         * @var null|array|Options
+         */
+        private null|array|Options $extra = null,
     ) {
         if (empty($name)) $this->name = $path;
+        $this->extra = new Options($extra);
 
-        for ($i=0; $i < count($this->methods); $i++)
+        for ($i = 0; $i < count($this->methods); $i++)
             if (!$this->methods[$i] instanceof HttpMethod) $this->methods[$i] = HttpMethod::tryFrom($this->methods[$i]);
     }
 
@@ -136,5 +153,26 @@ class Route {
         }
 
         return $this->parameters;
+    }
+
+    /**
+     * property - gets extra property information
+     * 
+     * @since 1.2.0
+     *
+     * @param string $name the extra info property name
+     * @param array $params params to fill out property value (if its a template)
+     *
+     * @return string extra info property value OR empty string if not valid.
+     */
+    public function property(string $name, array $params = []): string {
+        $string = $this->extra->get($name, '');
+        
+        foreach ($params as $k => $v) {
+            $params['{' . $k . '}'] = $v;
+            unset($params[$k]);
+        }
+
+        return strtr($string, $params);
     }
 }

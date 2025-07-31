@@ -172,8 +172,9 @@ class Router {
     private function matchRequest(Request $request, Route $route, ?array &$params = []): bool {
         $url = $request->getUri()->getPath();
         $query = [];
-        if ($this->splitQuerystring && str_contains($url, '?')) {
-            $query = parse_url("$request")['query'];
+        if ($this->splitQuerystring && !empty($request->getUri()->getQuery())) {
+            if (!$params) $params = [];
+            $query = $request->getUri()->getQuery();
             $url = str_replace("?$query", '', $url);
             parse_str($query, $query);
             $params['query-string'] = $query;

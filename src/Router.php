@@ -356,7 +356,7 @@ class Router {
      * If a match is found then an array is returned with the class, method and parameters, otherwise null is returned.
      *
      * @since 0.1.3 Route & uri are now returned as part of the array
-     * @since 1.4.0 methid returns a RouteMatch object
+     * @since 1.4.0 method returns a RouteMatch object
      *
      * @param null|\Inane\Http\Request $request if not the current request
      *

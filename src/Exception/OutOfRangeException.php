@@ -3,16 +3,21 @@
 /**
  * Inane: Routing
  *
- * PHP version 8.1
+ * HTTP Routing using attributes.
  *
- * @author Philip Michael Raab<peep@inane.co.za>
- * @package Inane\Routing
+ * $Id$
+ * $Date$
+ *
+ * PHP version 8.4
+ *
+ * @author Philip Michael Raab<philip@cathedral.co.za>
+ * @package inanepain\routing
+ * @category routing
  *
  * @license UNLICENSE
- * @license https://github.com/inanepain/stdlib/raw/develop/UNLICENSE UNLICENSE
+ * @license https://unlicense.org/UNLICENSE UNLICENSE
  *
- * @version $Id$
- * $Date$
+ * _version_ $version
  */
 
 declare(strict_types=1);
@@ -24,7 +29,6 @@ use Inane\Stdlib\Exception\OutOfRangeException as InaneOutOfRangeException;
 /**
  * Exception thrown when an illegal index was requested. This represents errors that should be detected at compile time.
  *
- * @package Inane\Routing\Exception
  * @implements \Inane\Stdlib\Exception\ExceptionInterface
  * @version 0.1.0
  */

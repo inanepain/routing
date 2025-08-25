@@ -3,16 +3,21 @@
 /**
  * Inane: Routing
  *
- * PHP version 8.1
+ * HTTP Routing using attributes.
  *
- * @author Philip Michael Raab<peep@inane.co.za>
- * @package Inane\Routing
+ * $Id$
+ * $Date$
+ *
+ * PHP version 8.4
+ *
+ * @author Philip Michael Raab<philip@cathedral.co.za>
+ * @package inanepain\routing
+ * @category routing
  *
  * @license UNLICENSE
- * @license https://github.com/inanepain/stdlib/raw/develop/UNLICENSE UNLICENSE
+ * @license https://unlicense.org/UNLICENSE UNLICENSE
  *
- * @version $Id$
- * $Date$
+ * _version_ $version
  */
 
 declare(strict_types=1);
@@ -21,8 +26,6 @@ namespace Inane\Routing\Exception;
 
 /**
  * Exception thrown when variable is not a Route
- *
- * @package Inane\Routing\Exception
  *
  * @implements \Inane\Stdlib\Exception\ExceptionInterface
  *

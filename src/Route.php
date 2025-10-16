@@ -103,7 +103,7 @@ class Route {
         if (empty($name)) $this->name = $path;
         $this->extra = new Options($extra);
 
-        for ($i = 0; $i < count($this->methods); $i++)
+        for ($i = 0, $iMax = count($this->methods); $i < $iMax; $i++)
             if (!$this->methods[$i] instanceof HttpMethod) $this->methods[$i] = HttpMethod::tryFrom($this->methods[$i]);
     }
 

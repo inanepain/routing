@@ -20,7 +20,7 @@ NOTE: examples updated to use RouteMatch.
 
 Add routing to your application by simply using attributes on your methods to configure the route.
 
-include::./doc/install.adoc[leveloffset=+1]
-include::./doc/attributes.adoc[leveloffset=+1]
-include::./doc/usage.adoc[leveloffset=+1]
-include::./doc/appendix.adoc[leveloffset=+1]
+include::./part/install.adoc[leveloffset=+1]
+include::./part/attributes.adoc[leveloffset=+1]
+include::./part/usage.adoc[leveloffset=+1]
+include::./part/appendix.adoc[leveloffset=+1]

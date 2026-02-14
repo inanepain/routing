@@ -1,8 +1,9 @@
-= inanepain/routing
+= inanepain/routing image:./icon.png[title=inanepain/routing,25]
 :author: Philip Michael Raab
 :email: <philip@cathedral.co.za>
-:keywords: routing, router, route, attribute
 :description: HTTP Routing using attributes.
+:keywords: routing, router, route, attribute
+:homepage: https://github.com/inanepain/routing
 :revnumber: 1.4.0
 :revdate: 2025-04-09
 :copyright: Unlicense
@@ -12,15 +13,34 @@
 :source-highlighter: highlight.js
 :toc: auto
 :sectanchors:
-:toclevels: 3
+:idprefix: topic-
+:idseparator: -
+:pkg-vendor: inanepain
+:pkg-name: routing
+:pkg-id: {pkg-vendor}/{pkg-name}
 
-version: $Id$ ($Date$)
+== image:./icon.png[title={pkg-id},25] {pkg-id}
 
 NOTE: examples updated to use RouteMatch.
 
+{description}
+
 Add routing to your application by simply using attributes on your methods to configure the route.
 
+:sectnums:
+
+<<<
+
 include::./part/install.adoc[leveloffset=+1]
+
+<<<
+
 include::./part/attributes.adoc[leveloffset=+1]
+
+<<<
+
 include::./part/usage.adoc[leveloffset=+1]
+
+<<<
+
 include::./part/appendix.adoc[leveloffset=+1]

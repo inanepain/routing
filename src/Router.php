@@ -8,7 +8,7 @@
  * $Id$
  * $Date$
  *
- * PHP version 8.4
+ * PHP version 8.5
  *
  * @author Philip Michael Raab<philip@cathedral.co.za>
  * @package inanepain\routing
@@ -25,6 +25,10 @@ declare(strict_types=1);
 namespace Inane\Routing;
 
 use Inane\Http\Request;
+use Inane\Routing\Exception\{
+    InvalidArgumentException,
+    InvalidRouteException,
+    OutOfRangeException};
 use Inane\Stdlib\Options;
 
 use function array_diff_key;
@@ -39,23 +43,17 @@ use function in_array;
 use function is_array;
 use function is_null;
 use function is_string;
+use function parse_str;
 use function preg_match;
 use function preg_quote;
 use function preg_replace;
 use function sprintf;
-use function str_starts_with;
-use function str_contains;
 use function str_replace;
-use function parse_str;
+use function str_starts_with;
+
 use const false;
 use const null;
 use const true;
-
-use Inane\Routing\Exception\{
-    InvalidArgumentException,
-    InvalidRouteException,
-    OutOfRangeException
-};
 
 /**
  * Router
@@ -332,7 +330,7 @@ class Router {
 
     /**
      * property - gets extra route property information
-     * 
+     *
      * @since 0.1.0
      *
      * @param string $routeName  name of route to build

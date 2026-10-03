@@ -1,2 +1,4 @@
 inanepain/routing:
-  HTTP Routing using attributes.
+	HTTP Routing using attributes.
+	- git-attributes
+	- tests: create test case. @PHPUnit

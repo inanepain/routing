@@ -30,6 +30,8 @@ use Inane\Routing\Exception\{
     InvalidRouteException,
     OutOfRangeException};
 use Inane\Stdlib\Options;
+use ReflectionClass;
+use ReflectionException;
 
 use function array_diff_key;
 use function array_filter;
@@ -62,7 +64,7 @@ use const true;
  */
 class Router {
     /**
-     * Array that will contain in value, each of the routes defined in the controllers with the target class and
+     * Array that'll contain in value, each of the routes defined in the controllers with the target class and
      * method and the name of the route as the key.
      *
      * @var array $routes
@@ -70,8 +72,8 @@ class Router {
     private array $routes = [];
 
     /**
-     * Allows to define with a single call to the constructor, all the configuration necessary for the operation
-     * of the router
+     * Allows defining with a single call to the constructor, all the configuration necessary for the operation
+     * of the router.
      *
      * route config:
      *  [
@@ -81,15 +83,17 @@ class Router {
      *              'path' => '/archive/{section}/year/{id<\d+>}',
      *              'methods' => ['GET'],
      *          ],
-     *          'class'  => HistoryController::class,
+     *          'class' => HistoryController::class,
      *          'method' => 'list',
      *      ],
      *  ]
      *
-     * @param array  $routes Classes containing Route attributes or configurations
+     * @param array  $routes  Classes containing Route attributes or configurations
      * @param string $baseURI Part of the URI to exclude
+     * @param bool   $splitQuerystring
      *
-     * @throws \ReflectionException when the controller does not exist
+     * @throws InvalidRouteException
+     * @throws ReflectionException when the controller does not exist
      */
     public function __construct(
         array $routes = [],
@@ -105,9 +109,9 @@ class Router {
      *
      * @since 1.2.0
      *
-     * @param array|\Inane\Routing\Route $route
-     * @param string $class
-     * @param string $method
+     * @param array|Route $route
+     * @param string      $class
+     * @param string      $method
      *
      * @return void
      */
@@ -122,21 +126,25 @@ class Router {
     }
 
     /**
-     * Create route from attribute
+     * Create a route from an attribute
      *
      * @since 1.2.0
      *
      * @param string $controller class to parse for Route Attribute
      *
      * @return void
+     * @throws ReflectionException
      */
     private function parseRouteAttribute(string $controller): void {
-        $reflectionController = new \ReflectionClass($controller);
+        $reflectionController = new ReflectionClass($controller);
 
         foreach ($reflectionController->getMethods() as $reflectionMethod) {
             $routeAttributes = $reflectionMethod->getAttributes(Route::class);
 
             foreach ($routeAttributes as $routeAttribute) {
+                /**
+                 * @var Route $route Instanciated from the attribute.
+                 */
                 $route = $routeAttribute->newInstance();
                 $this->addRoute($route, $reflectionMethod->class, $reflectionMethod->name);
             }
@@ -144,12 +152,12 @@ class Router {
     }
 
     /**
-     * Create route from config
+     * Create a route from config
      *
      * @since 1.2.0
      *
-     * @param string $name
-     * @param array|\Inane\Stdlib\Options $config
+     * @param string        $name
+     * @param array|Options $config
      *
      * @return void
      */
@@ -161,23 +169,20 @@ class Router {
     /**
      * Check if the user's request matches the given route
      *
-     * @param \Inane\Http\Request $request Request
-     * @param \Inane\Routing\Route $route Route
-     * @param null|array $params Array that will be filled with the parameters and their value provided in the request
+     * @param Request    $request Request
+     * @param Route      $route   Route
+     * @param null|array $params  Array that will be filled with the parameters and their value provided in the request
      *
      * @return bool
-     *
-     * @throws \Inane\Stdlib\Exception\UnexpectedValueException
-     * @throws \Inane\Stdlib\Exception\BadMethodCallException
      */
     private function matchRequest(Request $request, Route $route, ?array &$params = []): bool {
         $url = $request->getUri()->getPath();
         $query = [];
         if ($this->splitQuerystring && !empty($request->getUri()->getQuery())) {
             if (!$params) $params = [];
-            $query = $request->getUri()->getQuery();
-            $url = str_replace("?$query", '', $url);
-            parse_str($query, $query);
+            $queryString = $request->getUri()->getQuery();
+            $url = str_replace("?$queryString", '', $url);
+            parse_str($queryString, $query);
             $params['query-string'] = $query;
         }
 
@@ -217,13 +222,13 @@ class Router {
     }
 
     /**
-     * Define the base URI in order to exclude it in the route correspondence.
+     * Define the base URI to exclude it in the route correspondence.
      *
-     * Useful when the project is called from a sub-folder.
+     * Useful when the project is called from a subfolder.
      *
      * @param string $baseURI Part of the URI to exclude
      *
-     * @return \Inane\Routing\Router router
+     * @return Router router
      */
     public function setBaseURI(string $baseURI): self {
         $this->baseURI = $baseURI;
@@ -232,7 +237,7 @@ class Router {
     }
 
     /**
-     * Adds routes from config array
+     * Adds routes from the config array
      *
      * items:
      * - controller using Route attributes
@@ -246,16 +251,16 @@ class Router {
      *              'path' => '/archive/{section}/year/{id<\d+>}',
      *              'methods' => ['GET'],
      *          ],
-     *          'class'  => HistoryController::class,
+     *          'class' => HistoryController::class,
      *          'method' => 'list',
      *      ],
      *  ]
      *
-     * @param array|Inane\Stdlib\Options $routes array of route configurations and controllers
+     * @param array|Options $routes array of route configurations and controllers
      *
-     * @return \Inane\Routing\Router router
+     * @return Router router
      *
-     * @throws \ReflectionException when the controller does not exist
+     * @throws \ReflectionException|InvalidRouteException when the controller does not exist
      */
     public function addRoutes(array|Options $routes): self {
         foreach($routes as $n => $r) {
@@ -285,8 +290,8 @@ class Router {
      *
      * @return string url
      *
-     * @throws \Inane\Routing\Exception\OutOfRangeException If route does not exist
-     * @throws \Inane\Routing\Exception\InvalidArgumentException If not all route parameters are provided
+     * @throws OutOfRangeException If route does not exist
+     * @throws InvalidArgumentException If not all route parameters are provided
      */
     public function url(string $routeName, array $parameters = []): string {
         if (!isset($this->routes[$routeName]))
@@ -305,19 +310,19 @@ class Router {
             // Checks that all parameters are provided
             if ($missingParameters = array_diff_key($routeParams, $parameters))
                 throw new InvalidArgumentException(sprintf(
-                    'The following parameters are missing for generating the route "%s": %s',
+                    'The following parameters are missing for generating the route "%s": %s.',
                     $routeName,
                     implode(', ', array_keys($missingParameters))
                 ));
 
             // Compare each of the values provided with the regular expressions contained in the path and replace it in
-            // the path if it is valid
+            // the path if it's valid.
             foreach ($routeParams as $paramName => $regex) {
                 $regex = (!empty($regex) ? $regex : Route::DEFAULT_REGEX);
 
                 if (!preg_match("/^$regex$/", (string) $parameters[$paramName]))
                     throw new InvalidArgumentException(sprintf(
-                        'The "%s" route parameter value given does not match the regular expression',
+                        'The "%s" route parameter value given does not match the regular expression.',
                         $paramName
                     ));
 
@@ -333,11 +338,12 @@ class Router {
      *
      * @since 0.1.0
      *
-     * @param string $routeName  name of route to build
+     * @param string $routeName name of route to build
      * @param string $property  the extra route info property name
-     * @param array $params params to fill out property value (if its a template)
+     * @param array  $params    params to fill out property value (if its a template)
      *
      * @return string extra route info property value OR empty string if not valid.
+     * @throws OutOfRangeException
      */
     public function routeProperty(string $routeName, string $property, array $params = []): string {
         if (!isset($this->routes[$routeName]))
@@ -353,18 +359,16 @@ class Router {
     /**
      * Returns the route that corresponds to the request.
      *
-     * Iterate over all the attributes of the controllers in order to find the first one corresponding to the request.
-     * If a match is found then an array is returned with the class, method and parameters, otherwise null is returned.
+     * Iterate over all the attributes of the controllers to find the first one corresponding to the request.
+     * If a match is found, then an array is returned with the class, method and parameters, otherwise null is returned.
      *
      * @since 0.1.3 Route & uri are now returned as part of the array
      * @since 1.4.0 method returns a RouteMatch object
      *
-     * @param null|\Inane\Http\Request $request if not the current request
+     * @param null|Request $request if not the current request
      *
-     * @return null|\Inane\Routing\RouteMatch
+     * @return null|RouteMatch
      *
-     * @throws \Inane\Stdlib\Exception\UnexpectedValueException
-     * @throws \Inane\Stdlib\Exception\BadMethodCallException
      */
     public function match(?Request $request = null): ?RouteMatch {
         if (is_null($request)) $request = new Request();
@@ -372,7 +376,7 @@ class Router {
 
         if (!empty($this->baseURI)) {
             $baseURI = preg_quote($this->baseURI, '/');
-            $uri = preg_replace("/^{$baseURI}/", '', $uri);
+            $uri = preg_replace("/^$baseURI/", '', $uri);
         }
         $uri = (empty($uri) ? '/' : $uri);
 
@@ -382,10 +386,9 @@ class Router {
 				$route['params'] = $params ?? [];
 				$route['uri'] = $uri;
 
-                $rm = new RouteMatch($route);
                 // dd($rm, 'Matched Route');
 				// return new RouteMatch($route);
-				return $rm;
+				return new RouteMatch($route);
             }}
 
         return null;

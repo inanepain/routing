@@ -10,17 +10,17 @@
  *
  * PHP version 8.5
  *
- * @author Philip Michael Raab<philip@cathedral.co.za>
- * @package inanepain\routing
+ * @author   Philip Michael Raab<philip@cathedral.co.za>
+ * @package  inanepain\routing
  * @category routing
  *
- * @license UNLICENSE
- * @license https://unlicense.org/UNLICENSE UNLICENSE
+ * @license  UNLICENSE
+ * @license  https://unlicense.org/UNLICENSE UNLICENSE
  *
  * _version_ $version
  */
 
-declare(strict_types=1);
+declare(strict_types = 1);
 
 namespace Inane\Routing;
 
@@ -29,6 +29,7 @@ use Inane\Routing\Exception\{
     InvalidArgumentException,
     InvalidRouteException,
     OutOfRangeException};
+use Inane\Stdlib\Array\OptionsInterface;
 use Inane\Stdlib\Options;
 use ReflectionClass;
 use ReflectionException;
@@ -43,7 +44,6 @@ use function explode;
 use function implode;
 use function in_array;
 use function is_array;
-use function is_null;
 use function is_string;
 use function parse_str;
 use function preg_match;
@@ -88,17 +88,17 @@ class Router {
      *      ],
      *  ]
      *
-     * @param array  $routes  Classes containing Route attributes or configurations
-     * @param string $baseURI Part of the URI to exclude
-     * @param bool   $splitQuerystring
+     * @param array|OptionsInterface $routes  Classes containing Route attributes or configurations
+     * @param string                 $baseURI Part of the URI to exclude
+     * @param bool                   $splitQuerystring
      *
      * @throws InvalidRouteException
      * @throws ReflectionException when the controller does not exist
      */
     public function __construct(
-        array $routes = [],
-        private string $baseURI = '',
-        protected(set) bool $splitQuerystring = false,
+        array|OptionsInterface $routes = [],
+        private string         $baseURI = '',
+        protected(set) bool    $splitQuerystring = false,
     ) {
         if (!empty($routes))
             $this->addRoutes($routes);
@@ -133,15 +133,16 @@ class Router {
      * @param string $controller class to parse for Route Attribute
      *
      * @return void
+     *
      * @throws ReflectionException
      */
     private function parseRouteAttribute(string $controller): void {
         $reflectionController = new ReflectionClass($controller);
 
-        foreach ($reflectionController->getMethods() as $reflectionMethod) {
+        foreach($reflectionController->getMethods() as $reflectionMethod) {
             $routeAttributes = $reflectionMethod->getAttributes(Route::class);
 
-            foreach ($routeAttributes as $routeAttribute) {
+            foreach($routeAttributes as $routeAttribute) {
                 /**
                  * @var Route $route Instanciated from the attribute.
                  */
@@ -176,11 +177,16 @@ class Router {
      * @return bool
      */
     private function matchRequest(Request $request, Route $route, ?array &$params = []): bool {
-        $url = $request->getUri()->getPath();
+        $url = $request->getUri()
+            ->getPath()
+        ;
         $query = [];
-        if ($this->splitQuerystring && !empty($request->getUri()->getQuery())) {
+        if ($this->splitQuerystring && !empty($request->getUri()
+                ->getQuery())) {
             if (!$params) $params = [];
-            $queryString = $request->getUri()->getQuery();
+            $queryString = $request->getUri()
+                ->getQuery()
+            ;
             $url = str_replace("?$queryString", '', $url);
             parse_str($queryString, $query);
             $params['query-string'] = $query;
@@ -199,7 +205,7 @@ class Router {
         )
             return false;
 
-        foreach ($pathArray as $index => $urlPart) {
+        foreach($pathArray as $index => $urlPart) {
             if (isset($requestArray[$index])) {
                 if (str_starts_with($urlPart, '{')) {
                     $routeParameter = explode(' ', preg_replace('/{([\w\-%]+)(<(.+)>)?}/', '$1 $3', $urlPart));
@@ -260,13 +266,13 @@ class Router {
      *
      * @return Router router
      *
-     * @throws \ReflectionException|InvalidRouteException when the controller does not exist
+     * @throws InvalidRouteException|ReflectionException when the controller does not exist
      */
     public function addRoutes(array|Options $routes): self {
         foreach($routes as $n => $r) {
             if (is_array($r) || $r instanceof Options)
                 $this->parseRouteConfig($n, $r);
-            else if (is_string($r) && class_exists($r))
+            elseif (is_string($r) && class_exists($r))
                 $this->parseRouteAttribute($r);
             else {
                 $message = 'Invalid Route: ';
@@ -297,7 +303,7 @@ class Router {
         if (!isset($this->routes[$routeName]))
             throw new OutOfRangeException(sprintf(
                 'The route does not exist. Check that the given route name "%s" is valid.',
-                $routeName
+                $routeName,
             ));
 
         /** @var Route $route */
@@ -312,21 +318,21 @@ class Router {
                 throw new InvalidArgumentException(sprintf(
                     'The following parameters are missing for generating the route "%s": %s.',
                     $routeName,
-                    implode(', ', array_keys($missingParameters))
+                    implode(', ', array_keys($missingParameters)),
                 ));
 
             // Compare each of the values provided with the regular expressions contained in the path and replace it in
             // the path if it's valid.
-            foreach ($routeParams as $paramName => $regex) {
+            foreach($routeParams as $paramName => $regex) {
                 $regex = (!empty($regex) ? $regex : Route::DEFAULT_REGEX);
 
-                if (!preg_match("/^$regex$/", (string) $parameters[$paramName]))
+                if (!preg_match("/^$regex$/", (string)$parameters[$paramName]))
                     throw new InvalidArgumentException(sprintf(
                         'The "%s" route parameter value given does not match the regular expression.',
-                        $paramName
+                        $paramName,
                     ));
 
-                $path = preg_replace('/{' . $paramName . '(<.+>)?}/', (string) $parameters[$paramName], $path);
+                $path = preg_replace('/{' . $paramName . '(<.+>)?}/', (string)$parameters[$paramName], $path);
             }
         }
 
@@ -349,7 +355,7 @@ class Router {
         if (!isset($this->routes[$routeName]))
             throw new OutOfRangeException(sprintf(
                 'The route does not exist. Check that the given route name "%s" is valid.',
-                $routeName
+                $routeName,
             ));
 
         /** @var Route $route */
@@ -371,8 +377,10 @@ class Router {
      *
      */
     public function match(?Request $request = null): ?RouteMatch {
-        if (is_null($request)) $request = new Request();
-        $uri = $request->getUri()->getPath();
+        if (!$request) $request = new Request();
+        $uri = $request->getUri()
+            ->getPath()
+        ;
 
         if (!empty($this->baseURI)) {
             $baseURI = preg_quote($this->baseURI, '/');
@@ -380,16 +388,17 @@ class Router {
         }
         $uri = (empty($uri) ? '/' : $uri);
 
-        foreach ($this->routes as $route){
+        foreach($this->routes as $route) {
             // dd($route, 'route for matching');
             if ($this->matchRequest($request, $route['route'], $params)) {
-				$route['params'] = $params ?? [];
-				$route['uri'] = $uri;
+                $route['params'] = $params ?? [];
+                $route['uri'] = $uri;
 
                 // dd($rm, 'Matched Route');
-				// return new RouteMatch($route);
-				return new RouteMatch($route);
-            }}
+                // return new RouteMatch($route);
+                return new RouteMatch($route);
+            }
+        }
 
         return null;
     }

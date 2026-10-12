@@ -41,7 +41,7 @@ class Route {
     /**
      * Default regular expression when none is defined in the parameter
      */
-    public const DEFAULT_REGEX = '[\w\-\.]+';
+    public const string DEFAULT_REGEX = '[\w\-\.]+';
 
     /**
      * @var array $parameters Keeps the parameters cached with the associated regex
@@ -58,9 +58,9 @@ class Route {
      *
      * @since 1.1.0 methods defaults to all methods
      *
-     * @param string $path url
-     * @param string $name route name
-     * @param \Inane\Http\HttpMethod[]|string[] $methods http methods
+     * @param string                $path    url
+     * @param string                $name    route name
+     * @param HttpMethod[]|string[] $methods http methods
      */
     public function __construct(
         /**
@@ -88,7 +88,7 @@ class Route {
         /**
          * Route methods
          *
-         * @var \Inane\Http\HttpMethod[]
+         * @var HttpMethod[]
          */
         private array $methods = [HttpMethod::Get, HttpMethod::Post, HttpMethod::Put, HttpMethod::Delete, HttpMethod::Patch, HttpMethod::Options],
         /**
@@ -128,7 +128,7 @@ class Route {
     /**
      * Methods
      *
-     * @return \Inane\Http\HttpMethod[]
+     * @return HttpMethod[]
      */
     public function getMethods(): array {
         return $this->methods;
@@ -160,7 +160,7 @@ class Route {
 
     /**
      * property - gets extra property information
-     * 
+     *
      * @since 1.2.0
      *
      * @param string $name the extra info property name
@@ -170,7 +170,7 @@ class Route {
      */
     public function property(string $name, array $params = []): string {
         $string = $this->extra->get($name, '');
-        
+
         foreach ($params as $k => $v) {
             $params['{' . $k . '}'] = $v;
             unset($params[$k]);

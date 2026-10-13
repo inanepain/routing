@@ -2,7 +2,7 @@
 :author: Philip Michael Raab
 :email: <philip@cathedral.co.za>
 :revnumber: 1.5.0
-:revdate: 2025-05-15
+:revdate: 2026-10-13
 :copyright: Unlicense
 :experimental:
 :icons: font
@@ -10,8 +10,6 @@
 :sectnums!:
 :toc: auto
 :sectanchors:
-
-Version: $Id$ ($Date$)
 
 == History
 

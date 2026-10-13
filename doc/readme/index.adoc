@@ -5,8 +5,8 @@
 :description: HTTP Routing using attributes.
 :keywords: routing, router, route, attribute
 :homepage: https://github.com/inanepain/routing
-:revnumber: 1.4.0
-:revdate: 2025-04-09
+:revnumber: 1.5.0
+:revdate: 2026-10-13
 :copyright: Unlicense
 :experimental:
 :hide-uri-scheme:
@@ -23,11 +23,13 @@
 
 == image:./icon.png[title={pkg-id},25] {pkg-id}
 
-NOTE: examples updated to use RouteMatch.
+NOTE: documentation updated for *1.5.0*: the `Route` attribute, `Router`, `RouteMatch` and the new `AttributeRouteCollector` each have their own section.
 
 {description}
 
 Add routing to your application by simply using attributes on your methods to configure the route.
+
+In short: mark the controller methods you want reachable with the `Route` attribute, hand the controllers to the `Router` and ask it for a match.
 
 :sectnums:
 
@@ -38,6 +40,18 @@ include::./part/install.adoc[leveloffset=+1]
 <<<
 
 include::./part/attributes.adoc[leveloffset=+1]
+
+<<<
+
+include::./part/router.adoc[leveloffset=+1]
+
+<<<
+
+include::./part/routematch.adoc[leveloffset=+1]
+
+<<<
+
+include::./part/collector.adoc[leveloffset=+1]
 
 <<<
 

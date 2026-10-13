@@ -5,8 +5,8 @@
 :description: HTTP Routing using attributes.
 :keywords: routing, router, route, attribute
 :homepage: https://github.com/inanepain/routing
-:revnumber: 1.4.0
-:revdate: 2025-04-09
+:revnumber: 1.5.0
+:revdate: 2026-10-13
 :copyright: Unlicense
 :experimental:
 :hide-uri-scheme:
@@ -23,11 +23,13 @@
 
 == image:./icon.png[title={pkg-id},25] {pkg-id}
 
-NOTE: examples updated to use RouteMatch.
+NOTE: documentation updated for *1.5.0*: the `Route` attribute, `Router`, `RouteMatch` and the new `AttributeRouteCollector` each have their own section.
 
 {description}
 
 Add routing to your application by simply using attributes on your methods to configure the route.
+
+In short: mark the controller methods you want reachable with the `Route` attribute, hand the controllers to the `Router` and ask it for a match.
 
 :sectnums:
 
@@ -50,19 +52,8 @@ composer require {pkg-id}
 :leveloffset: +1
 
 = Overview of Attributes
-:author: Philip Michael Raab
-:email: <philip@cathedral.co.za>
-:keywords: routing, router, route, attribute
-:description: HTTP Routing using attributes.
-:revnumber: 1.4.0
-:revdate: 2025-04-09
-:copyright: Unlicense
-:experimental:
-:hide-uri-scheme:
-:icons: font
-:source-highlighter: highlight.js
-:toc: auto
-:sectanchors:
+:revnumber: 1.5.0
+:revdate: 2026-10-13
 
 What is an *Attribute*? It's a class just like any other class only with the `Attribute` *Attribute*. So why are you treating it more like an `enum` or `Map` that can only hold a few values describing something? You don't do it with the classes you uses your custom attributes on! But I don't blame you, it all comes down to some pour choices in wording used by the documentation.
 
@@ -70,6 +61,375 @@ So how should I be think of *Attributes*? As classes naturally. Classes to objec
 
 Hope that gets you thinking about *Attributes* in a new, more realistic manor that leads to you adding that `#[Attribute]` line to a good many more classes.
 
+== The `Route` Attribute
+
+`Inane\Routing\Route` targets *methods* and may be repeated per controller, one attribute per route.
+
+.Route parameters
+[cols="1,1,2,3",options="header"]
+|===
+|Parameter |Type |Default |Description
+
+|`path`
+|`string`
+|_required_
+|The url path. Placeholders are written `{name}` with an optional regular expression: `{name<regex>}`.
+
+|`name`
+|`string`
+|`$path`
+|Unique route name, used by `Router::url()` and `Router::routeProperty()`.
+
+|`label`
+|`string`
+|`''`
+|A friendly name for the route, handy when building menus and links.
+
+|`methods`
+|`HttpMethod[]` or `string[]`
+|all methods
+|Http methods the route answers to. Strings are converted to `Inane\Http\HttpMethod` cases.
+
+|`extra`
+|`null\|array\|Options`
+|`null`
+|Totally custom values attached to the route, read back with `property()`.
+|===
+
+NOTE: Since *1.1.0* `methods` defaults to all http methods: `GET`, `POST`, `PUT`, `DELETE`, `PATCH` and `OPTIONS`.
+
+.Route attribute
+[source,php]
+----
+use Inane\Http\HttpMethod;
+use Inane\Routing\Route;
+
+class BlogController {
+    #[Route(path: '/blog', name: 'blog-index', label: 'Blog', methods: [HttpMethod::Get])]
+    public function indexTask(): array {
+        ...
+    }
+
+    // the `id` parameter only matches digits
+    #[Route(path: '/blog/{id<\d+>}', name: 'blog-post', label: 'Article', extra: ['title' => 'Article {id}'])]
+    public function postTask(): array {
+        ...
+    }
+}
+----
+
+=== Parameters
+
+A placeholder without a regular expression falls back to `Route::DEFAULT_REGEX` (`[\w\-\.]+`), so it matches a single path segment of word characters, hyphens and periods.
+
+* `hasParams()` - does the path contain any placeholders.
+* `fetchParams()` - placeholder names as keys with their regular expression (empty when the default applies) as value.
+
+=== Extra information
+
+Anything placed in `extra` is available through `property()`. The value is treated as a small template, meaning `{name}` tokens are replaced with the parameters supplied.
+
+.Extra information
+[source,php]
+----
+#[Route(path: '/blog/{id<\d+>}', name: 'blog-post', extra: ['title' => 'Article {id}'])]
+
+$route->property('title', ['id' => 7]); // Article 7
+$route->property('missing');            // '' (empty string when not set)
+----
+
+:leveloffset!:
+
+<<<
+
+:leveloffset: +1
+
+= The Router
+:revnumber: 1.5.0
+:revdate: 2026-10-13
+
+`Inane\Routing\Router` holds the routes, matches them against the request and builds urls from them.
+
+.Router constructor
+[source,php]
+----
+use Inane\Routing\Router;
+
+$router = new Router(
+    routes: [MainController::class],   // controllers and/or route configurations
+    baseURI: '/app',                   // part of the uri to exclude when matching
+    splitQuerystring: false,           // separate the querystring from the path
+);
+----
+
+[cols="1,1,2,3",options="header"]
+|===
+|Parameter |Type |Default |Description
+
+|`routes`
+|`array\|OptionsInterface`
+|`[]`
+|Controller class names carrying `Route` attributes and/or route configuration arrays.
+
+|`baseURI`
+|`string`
+|`''`
+|Part of the uri to strip before matching, useful when the project is served from a subfolder. Also prefixed onto generated urls.
+
+|`splitQuerystring`
+|`bool`
+|`false`
+|When `true` the querystring is removed from the path being matched and its values are parsed into the `query-string` parameter.
+|===
+
+== Adding routes
+
+Routes come from two sources, both handled by `addRoutes()`: controller classes using the `Route` attribute, and route configuration arrays keyed by the route name.
+
+.addRoutes
+[source,php]
+----
+$router->addRoutes([
+    MainController::class,
+    BlogController::class,
+    'backups' => [
+        'route'  => [
+            'path'    => '/archive/{section}/year/{id<\d+>}',
+            'methods' => ['GET'],
+        ],
+        'class'  => HistoryController::class,
+        'method' => 'list',
+    ],
+]);
+----
+
+CAUTION: An entry that is neither an existing class nor a configuration array raises an `InvalidRouteException`.
+
+TIP: `setBaseURI()` sets the base uri after construction; both it and `addRoutes()` return the router so calls may be chained.
+
+== Matching a request
+
+`match()` walks the routes in the order they were added and returns a `RouteMatch` for the first route whose path *and* http method satisfy the request, otherwise `null`. Pass a `Inane\Http\Request` to match something other than the current request.
+
+.match
+[source,php]
+----
+if ($match = $router->match()) {
+    $controller = new $match->class();
+    $controller->{$match->method}($match->params);
+}
+----
+
+== Building urls
+
+`url()` builds the path for a named route, filling in the placeholders from the parameters given and prefixing the base uri.
+
+.url
+[source,php]
+----
+$router->url('blog-index');                 // /blog
+$router->url('blog-post', ['id' => 7]);     // /blog/7
+----
+
+Each value is checked against the placeholder's regular expression, so:
+
+* an unknown route name throws an `OutOfRangeException`;
+* a missing parameter, or one that fails its regular expression, throws an `InvalidArgumentException`.
+
+== Route properties
+
+`routeProperty()` reaches the `extra` values of a named route, the parameters supplied fill out the value's `{name}` tokens.
+
+.routeProperty
+[source,php]
+----
+$router->routeProperty('blog-post', 'title', ['id' => 7]); // Article 7
+----
+
+== Querystrings
+
+With `splitQuerystring` enabled the querystring no longer takes part in the path matching and is instead parsed into the parameters under the `query-string` key.
+
+.splitQuerystring
+[source,php]
+----
+// GET /search?q=robot&page=2
+$router = new Router([SearchController::class], splitQuerystring: true);
+
+$match = $router->match();
+$match->params['query-string']; // ['q' => 'robot', 'page' => '2']
+----
+
+== Exceptions
+
+All exceptions live in the `Inane\Routing\Exception` namespace.
+
+[cols="1,3",options="header"]
+|===
+|Exception |Thrown when
+
+|`InvalidRouteException`
+|A route entry is neither a known class nor a valid configuration.
+
+|`OutOfRangeException`
+|The requested route name is not registered.
+
+|`InvalidArgumentException`
+|A route parameter is missing or does not match its regular expression.
+|===
+
+:leveloffset!:
+
+<<<
+
+:leveloffset: +1
+
+= The RouteMatch
+:revnumber: 1.5.0
+:revdate: 2026-10-13
+
+Since *1.4.0* `Router::match()` returns a `Inane\Routing\RouteMatch` describing the route that answered the request.
+
+[cols="1,1,3",options="header"]
+|===
+|Property |Type |Description
+
+|`class`
+|`string`
+|Fully qualified controller class.
+
+|`method`
+|`string`
+|Controller method to call.
+
+|`uri`
+|`string`
+|The uri used for matching, with the base uri already removed.
+
+|`params`
+|`array`
+|Values of the path placeholders, plus `query-string` when `splitQuerystring` is enabled.
+
+|`route`
+|`Route`
+|The matched `Route` itself, giving access to its path, name, methods and extras.
+
+|`template`
+|`string`
+|View template derived from the class and method names.
+|===
+
+.RouteMatch
+[source,php]
+----
+if ($match = $router->match()) {
+    $controller = new $match->class();
+    $data = $controller->{$match->method}($match->params);
+
+    echo $renderer->render($match->template, $data);
+}
+----
+
+`routeProperty()` is a shortcut to the matched route's extra information.
+
+[source,php]
+----
+$match->routeProperty('title', $match->params);
+----
+
+== The template
+
+The template is worked out lazily by a parser function: the class' short name and the method name, joined with a directory separator. By default `Controller` is stripped from the class name and `Task` from the method name, so `App\Controller\BlogController::postTask()` becomes `Blog/post`.
+
+Both suffixes are static properties and the whole parser may be replaced by passing a callable to the constructor.
+
+.Customising the template
+[source,php]
+----
+use Inane\Routing\RouteMatch;
+
+// change the stripped suffixes
+RouteMatch::$stripClass = 'Action';
+RouteMatch::$stripMethod = 'Handler';
+
+// or take over completely
+$match = new RouteMatch($route, static fn(string $class, string $method): string => "$class.$method");
+----
+
+:leveloffset!:
+
+<<<
+
+:leveloffset: +1
+
+= Collecting Controllers
+:revnumber: 1.5.0
+:revdate: 2026-10-13
+
+Listing every controller by hand grows tiresome. `Inane\Routing\AttributeRouteCollector` finds them for you by scanning the filesystem with a glob pattern and hands the result to a `Router`.
+
+.AttributeRouteCollector
+[source,php]
+----
+use Inane\File\Path;
+use Inane\Routing\AttributeRouteCollector;
+
+$collector = new AttributeRouteCollector([
+    'splitQuerystring' => false,
+    'controller'       => [
+        'glob'        => 'src/*/*Controller.php',
+        'glob_ignore' => '/(Abstract)/',
+        'default'     => [WhoopsController::class],
+        'path'        => new Path(__DIR__),
+    ],
+]);
+
+$router = $collector->createRouter();
+----
+
+== Configuration
+
+Options are merged over the defaults, so only the differences need to be given.
+
+[cols="1,2,3",options="header"]
+|===
+|Option |Default |Description
+
+|`splitQuerystring`
+|`false`
+|Passed to the `Router` created by `createRouter()`.
+
+|`controller.glob`
+|`src/*/*Controller.php`
+|Glob pattern, relative to `controller.path`, matching the controller files. `GLOB_BRACE` is enabled so `{a,b}` alternatives work.
+
+|`controller.glob_ignore`
+|`/(Abstract)/`
+|Regular expression tested against each filename; matches are skipped.
+
+|`controller.default`
+|`[]`
+|Controllers and route configurations appended to the collected list; duplicates are removed.
+
+|`controller.path`
+|`new Path()`
+|Search path for the glob, either a `Inane\File\Path` or a string.
+|===
+
+== Methods
+
+* `collect()` - the controller classes and route configurations as an `Options` collection.
+* `collectInto(Router $router)` - adds the collected routes to an existing router and returns it.
+* `createRouter(string $baseURI = '')` - creates a router, honouring `splitQuerystring`, populated with the collected routes.
+
+.Collecting into an existing router
+[source,php]
+----
+$router = new Router([StaticController::class]);
+$collector->collectInto($router);
+----
+
+NOTE: Classes are read from the matched files, so the files need only be reachable; the autoloader is left to load them when the routes are parsed.
 
 :leveloffset!:
 
@@ -78,43 +438,21 @@ Hope that gets you thinking about *Attributes* in a new, more realistic manor th
 :leveloffset: +1
 
 = Usage
-:author: Philip Michael Raab
-:email: <philip@cathedral.co.za>
-:keywords: routing, router, route, attribute
-:description: HTTP Routing using attributes.
-:revnumber: 1.4.0
-:revdate: 2025-04-09
-:copyright: Unlicense
-:experimental:
-:hide-uri-scheme:
-:icons: font
-:source-highlighter: highlight.js
-:toc: auto
-:sectanchors:
+:revnumber: 1.5.0
+:revdate: 2026-10-13
 
-Quick overview showing the bits relating to the `Route` `Attribute` in two examples. Neither are complete, though the simple example would run with minimum fuss. Check the Appendix for the `.htaccess` file you will need to use with the `index.php` file.
+Quick overview showing the bits relating to the `Route` `Attribute` in three examples. Not all are complete, though the simple example would run with minimum fuss. Check the Appendix for the `.htaccess` file you will need to use with the `index.php` file.
 
 == Examples
 :sectnums:
 
-An example is worth a thousand words, well here come two examples.
+An example is worth a thousand words, well here come three examples.
 
 :leveloffset: +2
 
 = Example: Simple
-:author: Philip Michael Raab
-:email: <philip@cathedral.co.za>
-:keywords: routing, router, route, attribute
-:description: HTTP Routing using attributes.
-:revnumber: 1.4.0
-:revdate: 2025-04-09
-:copyright: Unlicense
-:experimental:
-:hide-uri-scheme:
-:icons: font
-:source-highlighter: highlight.js
-:toc: auto
-:sectanchors:
+:revnumber: 1.5.0
+:revdate: 2026-10-13
 
 Super simple example using *php* built in web server. +
 We create a class, let's call it *MainController.php*, and add `Route` *attributes* to the methods we want routes to. The *path* is matched against the *url* with *regex*.
@@ -149,7 +487,7 @@ HTML;
 ----
 
 Our "application" sits in *index.php* which will pass through existing files and try route everything else. +
-We simple add our *MainController* to the `Router` and then check for a match.
+We simply add our *MainController* to the `Router` and then check for a match.
 
 .index.php
 [source,php]
@@ -173,42 +511,31 @@ if ($match = $router->match()) { // Check for a Route Match
     $controller = new $match->class();
     // and call the method with parameters.
     $controller->{$match->method}($match->params);
-} else { // Otherwise do what ever else, we'll through an error.
+} else { // Otherwise do what ever else, we'll throw an error.
     throw new Exception('Request Error: Unmatched `file` or `route`!');
 }
 ----
 
-Now let's file up php's built in server:
+Now let's fire up php's built in server:
 
 .php built-in server
 `php -S localhost:8080 -t public index.php`
 
-All thay's left is to visit the url in your favorit browser. +
-And that's a real basic emample of how it's and it doesn't really get much more complex.
+All that's left is to visit the url in your favourite browser. +
+And that's a real basic example of how it's done and it doesn't really get much more complex.
 
 :leveloffset: 1
 :leveloffset: +2
 
 = Example: Complete
-:author: Philip Michael Raab
-:email: <philip@cathedral.co.za>
-:keywords: routing, router, route, attribute
-:description: HTTP Routing using attributes.
-:revnumber: 1.4.0
-:revdate: 2025-04-09
-:copyright: Unlicense
-:experimental:
-:hide-uri-scheme:
-:icons: font
-:source-highlighter: highlight.js
-:toc: auto
-:sectanchors:
+:revnumber: 1.5.0
+:revdate: 2026-10-13
 
 Now let's try a slightly more complex example.
 
 == The various pieces
 
-Again we setup our routes by using attributes on the controller methods.
+Again we set up our routes by using attributes on the controller methods.
 
 .IndexController.php
 [source,php]
@@ -239,7 +566,7 @@ class IndexController extends AbstractController {
 }
 ----
 
-But now we're adding a view template to the mix. Not that this does much but it's just for show. So here we render an anchor.
+But now we're adding a view template to the mix. Not that this does much, but it's just for show. So here we render an anchor.
 
 .index.phtml (view template)
 [source,phtml]
@@ -261,7 +588,7 @@ Great.
 
 == Putting it all together
 
-Chuck that all into an app, I'm only showing the parts relavent to the routing.
+Chuck that all into an app, I'm only showing the parts relevant to the routing.
 
 .Application.php
 [source,php]
@@ -285,8 +612,8 @@ class Application {
     public function run(): void {
         ...
         if ($match = $this->router->match()) {
-            $controller = new $match->class($match['params']);
-            $data = $controller->{$match['method']}();
+            $controller = new $match->class($match->params);
+            $data = $controller->{$match->method}();
             ...
             // since 1.4.0: using the RouteMatch we can now easily get the template
             $body = $this->renderer->render($match->template, $data);
@@ -302,6 +629,61 @@ class Application {
 ... and you're of to the races.
 
 :leveloffset: 1
+:leveloffset: +2
+
+= Example: Collected
+:revnumber: 1.5.0
+:revdate: 2026-10-13
+
+The same application, only the controllers are no longer listed by hand; the `AttributeRouteCollector` goes looking for them.
+
+.Application.php
+[source,php]
+----
+use Inane\File\Path;
+use Inane\Routing\AttributeRouteCollector;
+
+class Application {
+    ...
+
+    protected function initialise(): void {
+        ...
+        $this->router = (new AttributeRouteCollector([
+            'splitQuerystring' => true,
+            'controller'       => [
+                // every *Controller.php one level down from src
+                'glob'        => 'src/*/*Controller.php',
+                // except the abstract ones
+                'glob_ignore' => '/(Abstract)/',
+                // and these, wherever they may live
+                'default'     => [WhoopsController::class],
+                'path'        => new Path(dirname(__DIR__)),
+            ],
+        ]))->createRouter();
+        ...
+    }
+
+    ...
+
+    public function run(): void {
+        ...
+        if ($match = $this->router->match()) {
+            $controller = new $match->class($match->params);
+            $data = $controller->{$match->method}();
+            ...
+            $body = $this->renderer->render($match->template, $data);
+            ...
+        }
+        ...
+    }
+
+    ...
+}
+----
+
+Drop a new controller into `src`, mark its methods with `Route` attributes and it is routed; no configuration to remember.
+
+:leveloffset: 1
 
 :sectnums!:
 
@@ -312,23 +694,12 @@ class Application {
 :leveloffset: +1
 
 = Appendix: .htaccess
-:author: Philip Michael Raab
-:email: <philip@cathedral.co.za>
-:keywords: routing, router, route, attribute
-:description: HTTP Routing using attributes.
-:revnumber: 1.4.0
-:revdate: 2025-04-09
-:copyright: Unlicense
-:experimental:
-:hide-uri-scheme:
-:icons: font
-:source-highlighter: highlight.js
-:toc: auto
-:sectanchors:
+:revnumber: 1.5.0
+:revdate: 2026-10-13
 
 You will also need to do some magic in your `.htaccess` file so that `index.php` handles all requests.
 
-[source,appache]
+[source,apache]
 ----
 RewriteEngine On
 # The following rule tells Apache that if the requested filename exists, simply serve it.

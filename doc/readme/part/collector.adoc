@@ -1,0 +1,68 @@
+= Collecting Controllers
+:revnumber: 1.5.0
+:revdate: 2026-10-13
+
+Listing every controller by hand grows tiresome. `Inane\Routing\AttributeRouteCollector` finds them for you by scanning the filesystem with a glob pattern and hands the result to a `Router`.
+
+.AttributeRouteCollector
+[source,php]
+----
+use Inane\File\Path;
+use Inane\Routing\AttributeRouteCollector;
+
+$collector = new AttributeRouteCollector([
+    'splitQuerystring' => false,
+    'controller'       => [
+        'glob'        => 'src/*/*Controller.php',
+        'glob_ignore' => '/(Abstract)/',
+        'default'     => [WhoopsController::class],
+        'path'        => new Path(__DIR__),
+    ],
+]);
+
+$router = $collector->createRouter();
+----
+
+== Configuration
+
+Options are merged over the defaults, so only the differences need to be given.
+
+[cols="1,2,3",options="header"]
+|===
+|Option |Default |Description
+
+|`splitQuerystring`
+|`false`
+|Passed to the `Router` created by `createRouter()`.
+
+|`controller.glob`
+|`src/*/*Controller.php`
+|Glob pattern, relative to `controller.path`, matching the controller files. `GLOB_BRACE` is enabled so `{a,b}` alternatives work.
+
+|`controller.glob_ignore`
+|`/(Abstract)/`
+|Regular expression tested against each filename; matches are skipped.
+
+|`controller.default`
+|`[]`
+|Controllers and route configurations appended to the collected list; duplicates are removed.
+
+|`controller.path`
+|`new Path()`
+|Search path for the glob, either a `Inane\File\Path` or a string.
+|===
+
+== Methods
+
+* `collect()` - the controller classes and route configurations as an `Options` collection.
+* `collectInto(Router $router)` - adds the collected routes to an existing router and returns it.
+* `createRouter(string $baseURI = '')` - creates a router, honouring `splitQuerystring`, populated with the collected routes.
+
+.Collecting into an existing router
+[source,php]
+----
+$router = new Router([StaticController::class]);
+$collector->collectInto($router);
+----
+
+NOTE: Classes are read from the matched files, so the files need only be reachable; the autoloader is left to load them when the routes are parsed.

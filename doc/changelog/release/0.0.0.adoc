@@ -1,16 +1,11 @@
-= 1.5.0-dev @2025 May xx
-:author: Philip Michael Raab
-:email: <philip@cathedral.co.za>
+= 1.5.0-dev (2026 Oct xx)
 :revnumber: 1.5.0
-:revdate: 2025-05-01
-:copyright: Unlicense
-:experimental:
-:icons: font
-:source-highlighter: highlight.js
-:sectnums!:
-:toc: auto
-:sectanchors:
+:revdate: 2026-10-13
 
+* *new*: `AttributeRouteCollector` finds controllers with a glob pattern and populates a `Router`.
+* *new*: `Route` attribute gains the `label` and `extra` properties with `Route::property` reading the extras.
 * *update*: `Route::method` property now defaults to *ALL* http commands.
 * *update*: *QueryString* handling getting an overhaul and new features.
+* *update*: *tests*: *PHPUnit* test cases for `Route`, `RouteMatch`, `Router` and `AttributeRouteCollector`.
+* *update*: *README*: sections for the `Route` attribute, `Router`, `RouteMatch` and `AttributeRouteCollector` along with a third example.
 * *fix*: proper uri request to match fix in *inanepain/http*

@@ -1,0 +1,51 @@
+= Example: Collected
+:revnumber: 1.5.0
+:revdate: 2026-10-13
+
+The same application, only the controllers are no longer listed by hand; the `AttributeRouteCollector` goes looking for them.
+
+.Application.php
+[source,php]
+----
+use Inane\File\Path;
+use Inane\Routing\AttributeRouteCollector;
+
+class Application {
+    ...
+
+    protected function initialise(): void {
+        ...
+        $this->router = (new AttributeRouteCollector([
+            'splitQuerystring' => true,
+            'controller'       => [
+                // every *Controller.php one level down from src
+                'glob'        => 'src/*/*Controller.php',
+                // except the abstract ones
+                'glob_ignore' => '/(Abstract)/',
+                // and these, wherever they may live
+                'default'     => [WhoopsController::class],
+                'path'        => new Path(dirname(__DIR__)),
+            ],
+        ]))->createRouter();
+        ...
+    }
+
+    ...
+
+    public function run(): void {
+        ...
+        if ($match = $this->router->match()) {
+            $controller = new $match->class($match->params);
+            $data = $controller->{$match->method}();
+            ...
+            $body = $this->renderer->render($match->template, $data);
+            ...
+        }
+        ...
+    }
+
+    ...
+}
+----
+
+Drop a new controller into `src`, mark its methods with `Route` attributes and it is routed; no configuration to remember.

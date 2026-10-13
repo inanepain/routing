@@ -1,0 +1,71 @@
+= The RouteMatch
+:revnumber: 1.5.0
+:revdate: 2026-10-13
+
+Since *1.4.0* `Router::match()` returns a `Inane\Routing\RouteMatch` describing the route that answered the request.
+
+[cols="1,1,3",options="header"]
+|===
+|Property |Type |Description
+
+|`class`
+|`string`
+|Fully qualified controller class.
+
+|`method`
+|`string`
+|Controller method to call.
+
+|`uri`
+|`string`
+|The uri used for matching, with the base uri already removed.
+
+|`params`
+|`array`
+|Values of the path placeholders, plus `query-string` when `splitQuerystring` is enabled.
+
+|`route`
+|`Route`
+|The matched `Route` itself, giving access to its path, name, methods and extras.
+
+|`template`
+|`string`
+|View template derived from the class and method names.
+|===
+
+.RouteMatch
+[source,php]
+----
+if ($match = $router->match()) {
+    $controller = new $match->class();
+    $data = $controller->{$match->method}($match->params);
+
+    echo $renderer->render($match->template, $data);
+}
+----
+
+`routeProperty()` is a shortcut to the matched route's extra information.
+
+[source,php]
+----
+$match->routeProperty('title', $match->params);
+----
+
+== The template
+
+The template is worked out lazily by a parser function: the class' short name and the method name, joined with a directory separator. By default `Controller` is stripped from the class name and `Task` from the method name, so `App\Controller\BlogController::postTask()` becomes `Blog/post`.
+
+Both suffixes are static properties and the whole parser may be replaced by passing a callable to the constructor.
+
+.Customising the template
+[source,php]
+----
+use Inane\Routing\RouteMatch;
+
+// change the stripped suffixes
+RouteMatch::$stripClass = 'Action';
+RouteMatch::$stripMethod = 'Handler';
+
+// or take over completely
+$match = new RouteMatch($route, static fn(string $class, string $method): string => "$class.$method");
+----

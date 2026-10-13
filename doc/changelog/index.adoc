@@ -1,8 +1,8 @@
 = Changelog: Routing
 :author: Philip Michael Raab
 :email: <philip@cathedral.co.za>
-:revnumber: 1.5.0
-:revdate: 2026-10-13
+:revnumber: 1.6.0
+:revdate: 2026-xx-xx
 :copyright: Unlicense
 :experimental:
 :icons: font
@@ -13,6 +13,7 @@
 
 == History
 
+include::./release/0.0.0.adoc[leveloffset=+2]
 include::./release/1.5.0.adoc[leveloffset=+2]
 include::./release/1.4.0.adoc[leveloffset=+2]
 include::./release/0.1.3.adoc[leveloffset=+2]

@@ -15,7 +15,7 @@
 
 :leveloffset: +2
 
-= 1.5.0-dev (2026 Oct xx)
+= 1.5.0 (2026 Oct 13)
 :revnumber: 1.5.0
 :revdate: 2026-10-13
 

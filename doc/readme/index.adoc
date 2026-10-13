@@ -23,7 +23,7 @@
 
 == image:./icon.png[title={pkg-id},25] {pkg-id}
 
-NOTE: documentation updated for *1.5.0*: the `Route` attribute, `Router`, `RouteMatch` and the new `AttributeRouteCollector` each have their own section.
+NOTE: Documentation updated for *1.5.0*: the `Route` attribute, `Router`, `RouteMatch` and the new `AttributeRouteCollector` each have their own section.
 
 {description}
 

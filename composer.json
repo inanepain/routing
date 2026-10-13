@@ -37,7 +37,7 @@
     "minimum-stability": "dev",
     "require": {
         "php": ">=8.5",
-        "inanepain/http": ">=0.1.3 || dev-master || dev-develop"
+        "inanepain/http": ">=0.4.0 || dev-master || dev-develop"
     },
     "require-dev": {},
     "scripts": {

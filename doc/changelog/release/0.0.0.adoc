@@ -1,11 +1,4 @@
-= 1.5.0-dev (2026 Oct xx)
-:revnumber: 1.5.0
-:revdate: 2026-10-13
-
-* *new*: `AttributeRouteCollector` finds controllers with a glob pattern and populates a `Router`.
-* *new*: `Route` attribute gains the `label` and `extra` properties with `Route::property` reading the extras.
-* *update*: `Route::method` property now defaults to *ALL* http commands.
-* *update*: *QueryString* handling getting an overhaul and new features.
-* *update*: *tests*: *PHPUnit* test cases for `Route`, `RouteMatch`, `Router` and `AttributeRouteCollector`.
-* *update*: *README*: sections for the `Route` attribute, `Router`, `RouteMatch` and `AttributeRouteCollector` along with a third example.
-* *fix*: proper uri request to match fix in *inanepain/http*
+= 1.6.0-dev (2026 Xxx xx)
+:revnumber: 1.6.0
+:revdate: 2026-xx-xx
+:revremark: Pending

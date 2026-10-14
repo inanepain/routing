@@ -9,6 +9,7 @@ use Inane\Http\Request;
 use Inane\Routing\Exception\InvalidArgumentException;
 use Inane\Routing\Exception\InvalidRouteException;
 use Inane\Routing\Exception\OutOfRangeException;
+use Inane\Routing\Route;
 use Inane\Routing\RouteMatch;
 use Inane\Routing\Router;
 use Inane\Routing\Tests\Fixture\Controller\BlogController;
@@ -50,6 +51,65 @@ final class RouterTest extends TestCase {
 
         $this->assertSame('/blog', $router->url('blog-index'));
         $this->assertSame('/blog/42', $router->url('blog-view', ['id' => 42]));
+    }
+
+    /**
+     * Repeated method attributes register independent routes.
+     */
+    public function testRepeatedAttributesMatchTheSameControllerMethod(): void {
+        $router = $this->attributeRouter();
+
+        $this->assertSame('/articles', $router->url('blog-alias'));
+        foreach (['/articles', '/blog'] as $path) {
+            $match = $router->match($this->request($path));
+
+            $this->assertInstanceOf(RouteMatch::class, $match);
+            $this->assertSame(BlogController::class, $match->class);
+            $this->assertSame('indexTask', $match->method);
+        }
+    }
+
+    /**
+     * Lookup returns the registered object without the router base URI.
+     */
+    public function testGetRouteReturnsTheRegisteredRoute(): void {
+        $router = $this->attributeRouter()->setBaseURI('/app');
+        $route = $router->getRoute('blog-view');
+
+        $this->assertInstanceOf(Route::class, $route);
+        $this->assertSame($route, $router->getRoute('blog-view'));
+        $this->assertSame('blog-view', $route->getName());
+        $this->assertSame('/blog/7', $route->getURL(['id' => 7]));
+        $this->assertSame('/app/blog/7', $router->url('blog-view', ['id' => 7]));
+    }
+
+    /**
+     * Unknown route lookup returns null rather than throwing.
+     */
+    public function testGetRouteReturnsNullForAnUnknownName(): void {
+        $this->assertNull($this->attributeRouter()->getRoute('missing-route'));
+    }
+
+    /**
+     * Matching activates the same route object exposed by lookup.
+     */
+    public function testMatchActivatesOnlyTheMatchedRoute(): void {
+        $router = $this->attributeRouter();
+        $route = $router->getRoute('blog-index');
+        $otherRoute = $router->getRoute('blog-view');
+
+        $this->assertInstanceOf(Route::class, $route);
+        $this->assertInstanceOf(Route::class, $otherRoute);
+        $this->assertFalse($route->active);
+        $this->assertNull($router->match($this->request('/nowhere')));
+        $this->assertFalse($route->active);
+
+        $match = $router->match($this->request('/blog'));
+
+        $this->assertInstanceOf(RouteMatch::class, $match);
+        $this->assertSame($route, $match->route);
+        $this->assertTrue($route->active);
+        $this->assertFalse($otherRoute->active);
     }
 
     public function testRoutesCanBeDefinedWithConfiguration(): void {

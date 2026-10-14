@@ -13,6 +13,7 @@ use Inane\Routing\Route;
  * Controller fixture carrying `Route` attributes.
  */
 class BlogController {
+    #[Route(path: '/articles', name: 'blog-alias', methods: [HttpMethod::Get])]
     #[Route(path: '/blog', name: 'blog-index', label: 'Blog', methods: [HttpMethod::Get], extra: [
         'icon' => 'book',
         'api'  => '/api/blog/{id}',

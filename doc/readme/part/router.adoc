@@ -76,7 +76,7 @@ if ($match = $router->match()) {
 
 == Building urls
 
-`url()` builds the path for a named route, filling in the placeholders from the parameters given and prefixing the base uri.
+`url()` delegates path generation and parameter validation to the named route's `getURL()` method, then prefixes the router's base URI. Calling `Route::getURL()` directly does not include that prefix. Additional parameters are ignored rather than appended as a querystring; parameter values are not URL-encoded.
 
 .url
 [source,php]
@@ -89,6 +89,12 @@ Each value is checked against the placeholder's regular expression, so:
 
 * an unknown route name throws an `OutOfRangeException`;
 * a missing parameter, or one that fails its regular expression, throws an `InvalidArgumentException`.
+
+== Named-route lookup
+
+`getRoute(string $routeName): ?Route` returns the registered `Inane\Routing\Route` object, or `null` for an unknown name. Unlike `url()` and `routeProperty()`, an unknown name does not raise an `OutOfRangeException`.
+
+The returned object is shared with the router and any corresponding `RouteMatch`. A successful match sets its `active` state to `true`; unsuccessful matches do not activate routes. Previously active routes are not automatically reset on subsequent calls.
 
 == Route properties
 

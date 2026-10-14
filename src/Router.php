@@ -34,14 +34,11 @@ use Inane\Stdlib\Options;
 use ReflectionClass;
 use ReflectionException;
 
-use function array_diff_key;
 use function array_filter;
-use function array_keys;
 use function array_values;
 use function class_exists;
 use function count;
 use function explode;
-use function implode;
 use function in_array;
 use function is_array;
 use function is_string;
@@ -287,6 +284,17 @@ class Router {
     }
 
     /**
+     * getRoute - retrieves the route object by its name
+     *
+     * @param string $routeName name of the route to retrieve
+     *
+     * @return null|Route the route object if it exists, or null if not found
+     */
+    public function getRoute(string $routeName): ?Route {
+        return $this->routes[$routeName]['route'] ?? null;
+    }
+
+    /**
      * Builds a URL for the routeName and parameters supplied
      *
      * @since 1.2.0
@@ -307,36 +315,7 @@ class Router {
             ));
 
         /** @var Route $route */
-        $route = $this->routes[$routeName]['route'];
-        $path = $route->getPath();
-
-        if ($route->hasParams()) {
-            $routeParams = $route->fetchParams();
-
-            // Checks that all parameters are provided
-            if ($missingParameters = array_diff_key($routeParams, $parameters))
-                throw new InvalidArgumentException(sprintf(
-                    'The following parameters are missing for generating the route "%s": %s.',
-                    $routeName,
-                    implode(', ', array_keys($missingParameters)),
-                ));
-
-            // Compare each of the values provided with the regular expressions contained in the path and replace it in
-            // the path if it's valid.
-            foreach($routeParams as $paramName => $regex) {
-                $regex = (!empty($regex) ? $regex : Route::DEFAULT_REGEX);
-
-                if (!preg_match("/^$regex$/", (string)$parameters[$paramName]))
-                    throw new InvalidArgumentException(sprintf(
-                        'The "%s" route parameter value given does not match the regular expression.',
-                        $paramName,
-                    ));
-
-                $path = preg_replace('/{' . $paramName . '(<.+>)?}/', (string)$parameters[$paramName], $path);
-            }
-        }
-
-        return $this->baseURI . $path;
+        return $this->baseURI . $this->routes[$routeName]['route']->getURL($parameters);
     }
 
     /**
@@ -393,6 +372,7 @@ class Router {
             if ($this->matchRequest($request, $route['route'], $params)) {
                 $route['params'] = $params ?? [];
                 $route['uri'] = $uri;
+                $route['route']->active = true;
 
                 // dd($rm, 'Matched Route');
                 // return new RouteMatch($route);

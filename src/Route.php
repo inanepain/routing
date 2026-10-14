@@ -25,18 +25,24 @@ declare(strict_types=1);
 namespace Inane\Routing;
 
 use Inane\Http\HttpMethod;
+use Inane\Routing\Exception\InvalidArgumentException;
 use Inane\Stdlib\Options;
 
 use function array_combine;
+use function array_diff_key;
+use function array_keys;
+use function implode;
 use function preg_match;
 use function preg_match_all;
+use function preg_replace;
+use function sprintf;
 
 /**
  * Route
  *
  * @version 1.2.0
  */
-#[\Attribute(\Attribute::TARGET_METHOD)]
+#[\Attribute(\Attribute::TARGET_METHOD | \Attribute::IS_REPEATABLE)]
 class Route {
     /**
      * Default regular expression when none is defined in the parameter
@@ -52,6 +58,11 @@ class Route {
      * @var array
      */
     private array $parameters;
+
+    public bool $active = false {
+        get => $this->active;
+        set => $this->active = $value;
+    }
 
     /**
      * Route Attribute
@@ -177,5 +188,50 @@ class Route {
         }
 
         return strtr($string, $params);
+    }
+
+    /**
+     * Generates a URL by replacing route parameters in the defined path with the provided values.
+     * If the route contains parameters, ensures all required parameters are provided and match the
+     * defined regular expressions.
+     *
+     * @param array $parameters An associative array of route parameters, where the key is the parameter
+     *                          name and the value is the parameter value to replace in the path.
+     *
+     * @return string The generated URL with all route parameters replaced.
+     *
+     * @throws InvalidArgumentException If any required parameter is missing.
+     * @throws InvalidArgumentException If a parameter value does not match its defined regular expression.
+     */
+    public function getURL(array $parameters = []): string {
+        $path = $this->getPath();
+
+        if ($this->hasParams()) {
+            $routeParams = $this->fetchParams();
+
+            // Checks that all parameters are provided
+            if ($missingParameters = array_diff_key($routeParams, $parameters))
+                throw new InvalidArgumentException(sprintf(
+                    'The following parameters are missing for generating the route "%s": %s.',
+                    $this->getName(),
+                    implode(', ', array_keys($missingParameters)),
+                ));
+
+            // Compare each of the values provided with the regular expressions contained in the path and replace it in
+            // the path if it's valid.
+            foreach($routeParams as $paramName => $regex) {
+                $regex = (!empty($regex) ? $regex : self::DEFAULT_REGEX);
+
+                if (!preg_match("/^$regex$/", (string)$parameters[$paramName]))
+                    throw new InvalidArgumentException(sprintf(
+                        'The "%s" route parameter value given does not match the regular expression.',
+                        $paramName,
+                    ));
+
+                $path = preg_replace('/{' . $paramName . '(<.+>)?}/', (string)$parameters[$paramName], $path);
+            }
+        }
+
+        return $path;
     }
 }

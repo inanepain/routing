@@ -10,7 +10,7 @@ Hope that gets you thinking about *Attributes* in a new, more realistic manor th
 
 == The `Route` Attribute
 
-`Inane\Routing\Route` targets *methods* and may be repeated per controller, one attribute per route.
+`Inane\Routing\Route` targets *methods* and is repeatable: a single controller method may declare multiple routes. Give each route a unique name so each remains independently accessible through the router.
 
 .Route parameters
 [cols="1,1,2,3",options="header"]
@@ -71,6 +71,16 @@ A placeholder without a regular expression falls back to `Route::DEFAULT_REGEX` 
 
 * `hasParams()` - does the path contain any placeholders.
 * `fetchParams()` - placeholder names as keys with their regular expression (empty when the default applies) as value.
+
+=== URL generation
+
+`getURL(array $parameters = []): string` builds a path directly from a route, without a router or base URI. It replaces placeholders with the supplied values and leaves the route's stored path unchanged.
+
+All placeholders are required. Values must satisfy the complete placeholder regular expression; unconstrained placeholders use `Route::DEFAULT_REGEX`. Missing or invalid values throw `Inane\Routing\Exception\InvalidArgumentException`. Additional parameters are ignored, not appended as a querystring. Values are not URL-encoded.
+
+=== Active state
+
+`active` starts as `false` and is writable. A successful `Router::match()` sets it to `true` on the registered route object, which is also exposed by `RouteMatch::route`. Matching does not automatically reset previously activated routes; reset their state explicitly when reusing a router across requests.
 
 === Extra information
 
